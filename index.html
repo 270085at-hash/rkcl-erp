@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RKCL ERP - Cloud & PWA Edition</title>
+    
+    <!-- PWA Connection Code (মোবাইলে অ্যাপ হিসেবে ইন্সটল করার জন্য) -->
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
+    
+    <!-- Tailwind CSS for UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Standard SDK Links -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-gray-800" oncontextmenu="return false;">
+
+    <!-- SECURE LOGIN SCREEN -->
+    <div id="login-page" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100] p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm border border-slate-200">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-slate-800">🛡️ RKCL ERP</h1>
+                <p class="text-xs text-gray-500 mt-1">Cloud & App Authentication</p>
+            </div>
+            <form onsubmit="handleSecureLogin(event)" class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Username / Email</label>
+                    <input type="text" id="loginUser" required placeholder="Enter username or email" class="w-full p-2.5 border rounded-lg text-sm outline-none bg-slate-50 focus:bg-white focus:border-blue-500" autocomplete="off">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Password</label>
+                    <input type="password" id="loginPass" required placeholder="Enter password" class="w-full p-2.5 border rounded-lg text-sm outline-none bg-slate-50 focus:bg-white focus:border-blue-500">
+                </div>
+                <div id="login-error" class="text-red-500 text-xs font-bold hidden text-center">❌ Invalid Credentials or Network Error!</div>
+                <button type="submit" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm transition shadow">Secure Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP INTERFACE -->
+    <div id="app-interface" class="hidden">
+        <nav class="bg-slate-950 text-white p-3 shadow-md sticky top-0 z-50 no-print">
+            <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+                <h1 class="text-base font-bold cursor-pointer text-center sm:text-left w-full sm:w-auto" onclick="switchPage('main')">🏭 RKCL ERP <span id="user-badge" class="text-xs text-blue-400 bg-slate-800 px-2 py-0.5 rounded ml-1"></span></h1>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="switchPage('control-panel')" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-xs font-bold px-4 py-2.5 rounded transition shadow text-center block">⚙️ Control Panel</button>
+                    <button onclick="handleSecureLogout()" class="bg-red-600 hover:bg-red-700 text-xs font-bold px-3 py-2.5 rounded transition shadow text-center block">Logout 🚪</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN INVOICE & BILL PAGE -->
+        <div id="main-page" class="container mx-auto p-4 max-w-6xl no-print space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-base font-bold mb-4 text-slate-700">📝 New Invoice & Bill Entry</h2>
+                <form id="invoice-form" onsubmit="saveInvoice(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Challan / Invoice ID</label>
+                        <input type="text" id="invId" required class="w-full p-2 border rounded text-sm mt-1">
+                    </div>
+                    <div class="relative">
+                        <label class="text-xs font-bold text-gray-500">Search Party / Buyer</label>
+                        <input type="text" id="invBuyerSearch" placeholder="Type to search..." autocomplete="off" class="w-full p-2 border rounded text-sm mt-1" oninput="searchCustomerInvoice(this.value)">
+                        <div id="buyer-search-results" class="absolute left-0 right-0 bg-white border max-h-40 overflow-y-auto hidden z-50 shadow-lg rounded-b"></div>
+                        <input type="hidden" id="invCustomerId">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Fabrication</label>
+                        <select id="invFabrication" required class="w-full p-2 border rounded text-sm mt-1"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Color</label>
+                        <input type="text" id="invColor" required class="w-full p-2 border rounded text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Dyeing Process</label>
+                        <select id="invProcess" required class="w-full p-2 border rounded text-sm mt-1" onchange="fetchAssignedRate()"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Rate Type</label>
+                        <select id="invRateType" required class="w-full p-2 border rounded text-sm mt-1" onchange="fetchAssignedRate()"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Fabric Weight (KG)</label>
+                        <input type="number" step="0.01" id="invWeight" required class="w-full p-2 border rounded text-sm mt-1" oninput="calculateTotal()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Assigned Rate (TK/KG)</label>
+                        <input type="number" id="invRate" readonly class="w-full p-2 border rounded text-sm mt-1 bg-gray-100 font-bold text-blue-600">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Total Bill (Auto)</label>
+                        <input type="number" id="invTotal" readonly class="w-full p-2 border rounded text-sm mt-1 bg-gray-100 font-bold text-green-600">
+                    </div>
+                    <div class="md:col-span-3 flex justify-end">
+                        <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-2.5 rounded text-sm font-bold hover:bg-blue-700 transition shadow">Save & Print</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-100 border-b">
+                    <h3 class="font-bold text-slate-700 text-sm">Cloud Saved Invoice Records</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs uppercase font-bold border-b">
+                                <th class="p-3">Date</th><th class="p-3">Invoice ID</th><th class="p-3">Party</th><th class="p-3">Details</th><th class="p-3">Weight</th><th class="p-3">Total</th><th class="p-3 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-list" class="text-sm divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTROL PANEL PAGE -->
+        <div id="control-panel-page" class="container mx-auto p-4 max-w-6xl no-print hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center border-b pb-3 gap-2">
+                <h2 class="text-xl font-bold text-slate-800">⚙️ Cloud Settings & Control Panel</h2>
+                <button onclick="switchPage('main')" class="w-full sm:w-auto bg-gray-600 text-white text-xs font-bold px-4 py-2 rounded hover:bg-gray-700">← Back to ERP</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border">
+                    <h3 class="font-bold text-sm text-slate-700 mb-3">2. Add General Process</h3>
+                    <form onsubmit="saveGeneralSetting(event, 'process')" class="flex gap-2">
+                        <input type="text" id="newProcessName" placeholder="Process Name" required class="w-full p-2 border rounded text-xs outline-none">
+                        <button type="submit" class="bg-slate-800 text-white text-xs px-3 font-bold rounded">Add</button>
+                    </form>
+                    <ul id="process-list" class="mt-3 text-xs divide-y max-h-40 overflow-y-auto"></ul>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border">
+                    <h3 class="font-bold text-sm text-slate-700 mb-3">3. Add General Fabrication</h3>
+                    <form onsubmit="saveGeneralSetting(event, 'fabrication')" class="flex gap-2">
+                        <input type="text" id="newFabricationName" placeholder="Fabrication Name" required class="w-full p-2 border rounded text-xs outline-none">
+                        <button type="submit" class="bg-slate-800 text-white text-xs px-3 font-bold rounded">Add</button>
+                    </form>
+                    <ul id="fabrication-list" class="mt-3 text-xs divide-y max-h-40 overflow-y-auto"></ul>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border">
+                    <h3 class="font-bold text-sm text-slate-700 mb-3">4. Add Rate Type</h3>
+                    <form onsubmit="saveGeneralSetting(event, 'rate_type')" class="flex gap-2">
+                        <input type="text" id="newRateTypeName" placeholder="e.g. Cotton" required class="w-full p-2 border rounded text-xs outline-none">
+                        <button type="submit" class="bg-slate-800 text-white text-xs px-3 font-bold rounded">Add</button>
+                    </form>
+                    <ul id="rate-type-list" class="mt-3 text-xs divide-y max-h-40 overflow-y-auto"></ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1 border-r pr-4">
+                    <h3 class="font-bold text-sm text-slate-700 mb-3">1. Add Customer Profile</h3>
+                    <form id="customer-form" onsubmit="saveCustomer(event)" class="space-y-3">
+                        <input type="text" id="custName" placeholder="Customer Name" required class="w-full p-2 border rounded text-xs outline-none">
+                        <textarea id="custAddress" placeholder="Full Address" class="w-full p-2 border rounded text-xs outline-none" rows="2"></textarea>
+                        <div class="border p-3 rounded bg-slate-50 space-y-3">
+                            <h4 class="font-bold text-xs text-slate-600 border-b pb-1">Set Custom Process Rates</h4>
+                            <div id="customer-rate-setup-list" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-bold text-xs p-2 rounded">Save Customer Profile</button>
+                    </form>
+                </div>
+                <div class="md:col-span-2">
+                    <h3 class="font-bold text-sm text-slate-700 mb-3">Saved Customer List</h3>
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 font-bold border-b"><th class="p-2">Code</th><th class="p-2">Customer Name</th><th class="p-2">Address</th><th class="p-2 text-center">Action</th></tr>
+                        </thead>
+                        <tbody id="customer-table-body" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT VIEW SECTION -->
+    <div id="print-section" class="hidden p-8 max-w-xl mx-auto bg-white border"></div>
+    <script>
+        // --- SECURE CONFIGURATION FROM YOUR SCREENSHOT ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2FqJBEEWIKdPvtVxLkhvS5pL7bM7S7vA",
+            authDomain: "erp-software-d0720.firebaseapp.com",
+            projectId: "erp-software-d0720",
+            storageBucket: "erp-software-d0720.firebasestorage.app",
+            messagingSenderId: "1093542483357",
+            appId: "1:1093542483357:web:e843ea3c6651bf87dd0b74"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // OFFLINE PERSISTENCE (অফলাইনে ডেটা সেভ রাখার সিস্টেম)
+        db.enablePersistence().catch(err => console.log("Offline storage enabled locally."));
+
+        let globalSettings = [];
+        let globalCustomers = [];
+        let globalRates = [];
+        let currentUserRole = ""; 
+
+        // ANTI-XSS ATTACK SANITIZATION
+        function sanitizeInput(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, m => {
+                const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'};
+                return map[m];
+            }).trim();
+        }
+
+        // FIREBASE SECURE LOGIC
+        async function handleSecureLogin(e) {
+            e.preventDefault();
+            const loginBtn = document.getElementById('login-btn');
+            const errorMsg = document.getElementById('login-error');
+            let userInput = document.getElementById('loginUser').value.trim();
+            let passInput = document.getElementById('loginPass').value;
+            
+            loginBtn.innerText = "Verifying Sign In...";
+            loginBtn.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            let secureEmail = userInput.toLowerCase() === "admin" ? "admin@rkcl.com" : userInput.toLowerCase() === "dye" ? "dye@rkcl.com" : userInput;
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(secureEmail, passInput);
+                const email = userCredential.user.email;
+                currentUserRole = email === "admin@rkcl.com" ? "Admin" : email === "dye@rkcl.com" ? "dye" : "Staff";
+
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('app-interface').classList.remove('hidden');
+                document.getElementById('user-badge').innerText = `(${currentUserRole} Active)`;
+                
+                startLiveSync();
+            } catch (error) {
+                errorMsg.classList.remove('hidden');
+            } finally {
+                loginBtn.innerText = "Secure Sign In";
+                loginBtn.disabled = false;
+            }
+        }
+
+        function handleSecureLogout() {
+            auth.signOut().then(() => {
+                currentUserRole = "";
+                document.getElementById('app-interface').classList.add('hidden');
+                document.getElementById('login-page').classList.remove('hidden');
+            });
+        }
+
+        // BLOCK DEVTOOLS SHORTCUTS
+        document.onkeydown = e => {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) return false;
+        };
+
+        function isOlderThan7Days(itemDateStr) {
+            if (!itemDateStr) return false;
+            let recordDate = new Date(itemDateStr);
+            let today = new Date();
+            recordDate.setHours(0,0,0,0); today.setHours(0,0,0,0);
+            return Math.ceil((today - recordDate) / (1000 * 60 * 60 * 24)) > 7;
+        }
+
+        function switchPage(page) {
+            if(page === 'control-panel') {
+                document.getElementById('main-page').classList.add('hidden');
+                document.getElementById('control-panel-page').classList.remove('hidden');
+                loadControlPanelData();
+            } else {
+                document.getElementById('control-panel-page').classList.add('hidden');
+                document.getElementById('main-page').classList.remove('hidden');
+                loadMainFormDropdowns();
+            }
+        }
+
+        function startLiveSync() {
+            db.collection("general_settings").onSnapshot(snap => {
+                globalSettings = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                loadMainFormDropdowns();
+                if(!document.getElementById('control-panel-page').classList.contains('hidden')) loadControlPanelData();
+            });
+            db.collection("customers").onSnapshot(snap => {
+                globalCustomers = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                if(!document.getElementById('control-panel-page').classList.contains('hidden')) loadCustomerTable();
+            });
+            db.collection("customer_rates").onSnapshot(snap => { globalRates = snap.docs.map(doc => doc.data()); });
+            db.collection("invoices").orderBy("created_date", "desc").onSnapshot(snap => { renderInvoiceTable(snap.docs.map(doc => ({id: doc.id, ...doc.data()}))); });
+        }
+
+        async function saveGeneralSetting(e, type) {
+            e.preventDefault();
+            let inputId = type === 'process' ? 'newProcessName' : type === 'fabrication' ? 'newFabricationName' : 'newRateTypeName';
+            let name = sanitizeInput(document.getElementById(inputId).value);
+            await db.collection("general_settings").add({ type, name });
+            document.getElementById(inputId).value = '';
+        }
+
+        function loadControlPanelData() {
+            renderSettingList(globalSettings.filter(i => i.type === 'process'), 'process-list');
+            renderSettingList(globalSettings.filter(i => i.type === 'fabrication'), 'fabrication-list');
+            renderSettingList(globalSettings.filter(i => i.type === 'rate_type'), 'rate-type-list');
+            buildCustomerRateMatrix(globalSettings.filter(i => i.type === 'process'), globalSettings.filter(i => i.type === 'rate_type'));
+            loadCustomerTable();
+        }
+
+        function renderSettingList(data, elementId) {
+            document.getElementById(elementId).innerHTML = data.map(i => `
+                <li class="py-1 flex justify-between items-center text-slate-600">
+                    <span>${i.name}</span>
+                    <button onclick="deleteSetting('${i.id}')" class="text-red-500 font-bold text-[10px]">Remove</button>
+                </li>`).join('');
+        }
+
+        async function deleteSetting(id) { 
+            if (currentUserRole === "dye") { alert("Access Denied for 'dye' role!"); return; }
+            await db.collection("general_settings").doc(id).delete(); 
+        }
+
+        function buildCustomerRateMatrix(processes, rateTypes) {
+            let container = document.getElementById('customer-rate-setup-list'); container.innerHTML = '';
+            if(processes.length === 0 || rateTypes.length === 0) return;
+            processes.forEach(p => {
+                rateTypes.forEach(r => {
+                    let div = document.createElement('div'); div.className = "flex items-center justify-between gap-2 border-b pb-1";
+                    div.innerHTML = `<label><input type="checkbox" class="rate-chk" data-process="${p.name}" data-type="${r.name}"> ${p.name} (${r.name})</label>
+                                     <input type="number" placeholder="0" class="w-14 p-1 border rounded text-right rate-val" data-process="${p.name}" data-type="${r.name}">`;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        async function saveCustomer(e) {
+            e.preventDefault();
+            let name = sanitizeInput(document.getElementById('custName').value);
+            let address = sanitizeInput(document.getElementById('custAddress').value);
+            let code = `${name.substring(0,3).toUpperCase()}-${String(globalCustomers.length + 1).padStart(3, '0')}`;
+            let docRef = await db.collection("customers").add({ customer_code: code, customer_name: name, address });
+            let rateInputs = document.querySelectorAll('.rate-chk:checked');
+            for(let chk of rateInputs) {
+                let proc = chk.getAttribute('data-process');
+                let rtype = chk.getAttribute('data-type');
+                let inputVal = document.querySelector(`.rate-val[data-process="${proc}"][data-type="${rtype}"]`).value;
+                await db.collection("customer_rates").add({ customer_id: docRef.id, process_name: proc, rate_type: rtype, rate: parseFloat(inputVal) || 0 });
+            }
+            document.getElementById('customer-form').reset();
+            alert(`Customer Saved! Code: ${code}`);
+        }
+
+        function loadCustomerTable() {
+            document.getElementById('customer-table-body').innerHTML = globalCustomers.map(c => `
+                <tr class="border-b"><td class="p-2 font-bold">${c.customer_code}</td><td class="p-2 font-medium">${c.customer_name}</td><td class="p-2 text-gray-500">${c.address || '-'}</td>
+                <td class="p-2 text-center"><button onclick="deleteCustomer('${c.id}')" class="text-red-500">Delete</button></td></tr>`).join('');
+        }
+
+        async function deleteCustomer(id) { 
+            if (currentUserRole === "dye") { alert("Access Denied!"); return; }
+            if(confirm("Delete Customer Profile?")) await db.collection("customers").doc(id).delete();
+        }
+
+        function loadMainFormDropdowns() {
+            buildDropdown('invFabrication', globalSettings.filter(s => s.type === 'fabrication'));
+            buildDropdown('invProcess', globalSettings.filter(s => s.type === 'process'));
+            buildDropdown('invRateType', globalSettings.filter(s => s.type === 'rate_type'));
+        }
+
+        function buildDropdown(id, data) { document.getElementById(id).innerHTML = '<option value="">Select Option</option>' + data.map(d => `<option value="${d.name}">${d.name}</option>`).join(''); }
+
+        window.searchCustomerInvoice = function(val) {
+            let box = document.getElementById('buyer-search-results'); if(!val.trim()) { box.classList.add('hidden'); return; }
+            let filtered = globalCustomers.filter(c => c.customer_name.toLowerCase().includes(val.toLowerCase())); if(filtered.length === 0) { box.classList.add('hidden'); return; }
+            box.innerHTML = filtered.map(c => `<div onclick="selectCustomerForInvoice('${c.id}', '${c.customer_name}', '${c.customer_code}')" class="p-2 text-xs hover:bg-slate-100 cursor-pointer font-medium border-b">${c.customer_name} (${c.customer_code})</div>`).join('');
+            box.classList.remove('hidden');
+        }
+
+        window.selectCustomerForInvoice = function(id, name, code) {
+            document.getElementById('invCustomerId').value = id;
+            document.getElementById('invBuyerSearch').value = `${name} (${code})`;
+            document.getElementById('buyer-search-results').classList.add('hidden');
+            fetchAssignedRate();
+        }
+
+        window.fetchAssignedRate = function() {
+            let custId = document.getElementById('invCustomerId').value;
+            let proc = document.getElementById('invProcess').value;
+            let rtype = document.getElementById('invRateType').value;
+            if(!custId || !proc || !rtype) return;
+            let match = globalRates.find(r => r.customer_id === custId && r.process_name === proc && r.rate_type === rtype);
+            document.getElementById('invRate').value = match ? match.rate : 0;
+            calculateTotal();
+        }
+
+        window.calculateTotal = function() {
+            let weight = parseFloat(document.getElementById('invWeight').value) || 0;
+            let rate = parseFloat(document.getElementById('invRate').value) || 0;
+            document.getElementById('invTotal').value = (weight * rate).toFixed(2);
+        }
+
+        async function saveInvoice(e) {
+            e.preventDefault();
+            let rawSearch = document.getElementById('invBuyerSearch').value; let parts = rawSearch.split(' (');
+            let invoiceData = {
+                invoice_id: sanitizeInput(document.getElementById('invId').value),
+                customer_name: sanitizeInput(parts[0]), customer_code: parts[1] ? sanitizeInput(parts[1].replace(')', '')) : '',
+                fabrication: document.getElementById('invFabrication').value, color: sanitizeInput(document.getElementById('invColor').value),
+                process_name: document.getElementById('invProcess').value, rate_type: document.getElementById('invRateType').value,
+                weight_kg: parseFloat(document.getElementById('invWeight').value), rate_per_kg: parseFloat(document.getElementById('invRate').value),
+                total_amount: parseFloat(document.getElementById('invTotal').value), created_date: new Date().toISOString().split('T')[0]
+            };
+            await db.collection("invoices").add(invoiceData);
+            alert("Invoice Saved Live Securely!"); printDoc('bill', invoiceData);
+            document.getElementById('invoice-form').reset();
+        }
+
+        window.tryAction = function(type, itemStr) {
+            let item = JSON.parse(decodeURIComponent(itemStr));
+            if (currentUserRole === "dye" && isOlderThan7Days(item.created_date)) {
+                alert(`🔒 Access Denied! Data older than 7 days. 'dye' user restricted.`);
+                return;
+            }
+            printDoc(type, item);
+        };
+
+        function renderInvoiceTable(data) {
+            let tbody = document.getElementById('invoice-list'); tbody.innerHTML = '';
+            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">No records online.</td></tr>`; return; }
+            data.forEach(item => {
+                let tr = document.createElement('tr'); tr.className = "border-b hover:bg-slate-50";
+                let itemStr = encodeURIComponent(JSON.stringify(item));
+                tbody.appendChild(tr);
+                tr.innerHTML = `
+                    <td class="p-3">${item.created_date}</td><td class="p-3 font-bold">${item.invoice_id}</td>
+                    <td class="p-3 font-semibold text-blue-600">${item.customer_name}</td><td class="p-3">${item.fabrication} (${item.color})</td>
+                    <td class="p-3">${item.weight_kg} KG</td><td class="p-3 font-bold text-green-600">${item.total_amount} TK</td>
+                    <td class="p-3 text-center space-x-1">
+                        <button onclick="tryAction('invoice', '${itemStr}')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">Challan</button>
+                        <button onclick="tryAction('bill', '${itemStr}')" class="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">Bill</button>
+                    </td>`;
+            });
+        }
+
+        function printDoc(type, item) {
+            let printSection = document.getElementById('print-section'); printSection.classList.remove('hidden');
+            let title = type === 'invoice' ? '📝 Delivery Challan' : '💵 Cash Bill';
+            let moneySection = type === 'bill' ? `<div class="border-t pt-2 mt-4 text-right"><p class="text-sm">Rate: <b>${item.rate_per_kg} TK</b></p><p class="text-lg font-bold text-green-700">Total Bill: ${item.total_amount} TK</p></div>` : '';
+            printSection.innerHTML = `
+                <div class="text-center mb-6"><h1 class="text-xl font-bold uppercase">RKCL ERP</h1><p class="text-xs text-gray-500">Narayanganj, Bangladesh</p><h2 class="text-sm font-bold mt-2 bg-slate-100 p-1 inline-block">${title}</h2></div>
+                <div class="grid grid-cols-2 text-xs gap-2 mb-4"><p>Invoice ID: <b>${item.invoice_id}</b></p><p class="text-right">Date: <b>${item.created_date}</b></p><p>Customer: <b>${item.customer_name} (${item.customer_code})</b></p><p class="text-right">Color: <b>${item.color}</b></p></div>
+                <table class="w-full text-left text-xs border-collapse border mt-4"><thead><tr class="bg-gray-100"><th class="border p-2">Fabrication</th><th class="border p-2">Process</th><th class="border p-2 text-right">Weight</th></tr></thead><tbody><tr><td class="border p-2">${item.fabrication}</td><td class="border p-2">${item.process_name} (${item.rate_type})</td><td class="border p-2 text-right font-bold">${item.weight_kg} KG</td></tr></tbody></table>
+                ${moneySection}<div class="flex justify-between mt-12 text-center text-[10px]"><div class="w-24 border-t pt-1">Receiver Signature</div><div class="w-24 border-t pt-1">Authorized Authority</div></div>`;
+            window.print(); printSection.classList.add('hidden');
+        }
+    </script>
+</body>
+  </html>
+  
