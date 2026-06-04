@@ -80,3 +80,32 @@ function closeOSWindow(id) { document.getElementById(id).classList.add('hidden')
     document.getElementById('app-interface').classList.remove('hidden');
 }
 </script></body></html>
+// সঠিক লগইন ও ফায়ারবেস অথেন্টিকেশন লজিক
+async function handleSecureLogin(e) {
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+    
+    let u = document.getElementById('loginUser').value.trim().toLowerCase();
+    let p = document.getElementById('loginPass').value;
+    
+    // গতকালের মতো সেই চিরচেনা অথেন্টিকেশন লজিক
+    if((u === 'admin' && p === 'html') || (u === 'dye' && p === 'dye')) {
+        // লগইন সফল হলে ইন্টারফেস দেখানো
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('app-interface').classList.remove('hidden');
+        
+        // ফায়ারবেস সিঙ্ক শুরু
+        startLiveSystemSync(); 
+    } else { 
+        alert("❌ INVALID IDENTITY OR ACCESS KEY");
+    }
+}
+
+// ফায়ারবেস সিঙ্ক ফাংশন
+function startLiveSystemSync() {
+    // এখানে আপনার আগের সেই ডাটাবেস সাবস্ক্রিপশন ফাংশনগুলো বসবে
+    db.collection("invoices").onSnapshot(s => { 
+        globalInvoices = s.docs.map(d => ({id: d.id, ...d.data()})); 
+        if(typeof renderStatementTable === 'function') renderStatementTable();
+    });
+}
+
