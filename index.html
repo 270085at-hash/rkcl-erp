@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rony Knit Composite Ltd - ERP</title>
     <link rel="manifest" href="./manifest.json">
     <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
@@ -13,20 +13,23 @@
     <style>
         /* প্রিন্ট করার জন্য সিএসএস রুলস */
         @media print { body * { visibility: hidden; } #print-section, #print-section * { visibility: visible; } #print-section { position: absolute; left: 0; top: 0; width: 100%; } }
-        body { -webkit-user-select: none; user-select: none; overflow: hidden; background-color: #d1d5db; font-family: sans-serif; }
+        body { -webkit-user-select: none; user-select: none; overflow: hidden; background-color: #d1d5db; font-family: sans-serif; touch-action: none; }
         .excel-box { border: 1px solid #7f8c8d !important; }
         .excel-table th, .excel-table td { border: 1px solid #7f8c8d !important; padding: 3px !important; }
         input:focus, select:focus { background-color: #eff6ff !important; outline: none; }
         .suggestions-box { max-height: 200px; overflow-y: auto; z-index: 100; position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid black; }
         
         /* উইন্ডো ইঞ্জিন এবং স্ক্রিন রেশিও অনুযায়ী ফন্ট ছোট-বড় করার সিএসএস */
-        .os-window { position: absolute; min-width: 320px; min-height: 240px; background: #eef2f3; border: 2px solid #57606f; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); display: flex; flex-direction: column; z-index: 10; overflow: hidden; container-type: inline-size; resize: both; }
-        .os-window-header { background: linear-gradient(to bottom, #747d8c, #2f3542); color: white; padding: 5px 10px; cursor: move; display: flex; justify-content: space-between; align-items: center; user-select: none; border-b: 1px solid #1e272e; }
+        .os-window { position: absolute; min-width: 280px; min-height: 200px; background: #eef2f3; border: 2px solid #57606f; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); display: flex; flex-direction: column; z-index: 10; overflow: hidden; container-type: inline-size; }
+        .os-window-header { background: linear-gradient(to bottom, #747d8c, #2f3542); color: white; padding: 5px 10px; cursor: move; display: flex; justify-content: space-between; align-items: center; user-select: none; border-b: 1px solid #1e272e; touch-action: none; }
         
         /* কন্টেইনার কুয়েরি টেক্সট অটো-সাইজার লজিক */
         .os-window-body { flex: 1; overflow: auto; padding: 10px; font-size: max(10px, 1.35cqw) !important; }
         .os-window-body input, .os-window-body select, .os-window-body button, .os-window-body table { font-size: max(9px, 1.15cqw) !important; }
         
+        /* মোবাইলের জন্য উইন্ডোর নিচে ডানদিকের রিসাইজ গ্রিপ বাটন */
+        .resize-handle { position: absolute; right: 0; bottom: 0; width: 20px; height: 20px; cursor: se-resize; background: linear-gradient(135deg, transparent 50%, #57606f 50%); z-index: 9999; touch-action: none; }
+
         /* ক্লাসিক সফটওয়্যার স্টাইল বাটন ডিজাইন */
         .vb-btn { background: linear-gradient(to bottom, #ffffff, #e0e0e0); border: 1px solid #7f8c8d; box-shadow: inset 1px 1px 0px #fff, 1px 1px 2px rgba(0,0,0,0.2); color: #000; font-weight: bold; padding: 4px 14px; border-radius: 3px; cursor: pointer; transition: all 0.1s; }
         .vb-btn:active { background: #dcdde1; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
@@ -39,6 +42,7 @@
     </style>
 </head>
 <body class="text-gray-900" oncontextmenu="return false;">
+
     <div id="login-page" class="fixed inset-0 bg-gray-300 flex items-center justify-center z-[100] p-4">
         <div class="bg-white border-2 border-slate-700 p-6 rounded shadow-2xl w-full max-w-sm">
             <h1 class="text-lg font-bold text-slate-800 text-center mb-4">🏭 Rony Knit Composite Ltd<br><span class="text-xs text-blue-600 tracking-wider font-mono">ERP SYSTEM CORE</span></h1>
@@ -231,46 +235,147 @@
             } 
         }
 
+    <div id="report-modal" class="fixed inset-0 bg-black/70 z-[200] hidden flex items-center justify-center p-4">
+        <div class="bg-white border-2 border-black w-full max-w-4xl rounded flex flex-col max-h-[90vh]">
+            <header class="bg-gray-100 border-b border-gray-400 p-2 flex justify-between items-center">
+                <h3 id="report-modal-title" class="text-xs font-bold text-slate-800">Print Preview Engine</h3>
+                <div class="flex gap-1.5">
+                    <button onclick="triggerPrintEngine()" class="bg-blue-600 text-white text-xs px-2.5 py-1 font-bold rounded">🖨️ Document Print</button>
+                    <button onclick="triggerExcelExport()" class="bg-emerald-600 text-white text-xs px-2.5 py-1 font-bold rounded">📊 Export Excel</button>
+                    <button onclick="closeReportModal()" class="bg-red-600 text-white text-xs px-2.5 py-1 font-bold rounded">Close Viewer</button>
+                </div>
+            </header>
+            <div id="report-modal-body" class="p-4 overflow-y-auto flex-1 bg-white font-mono text-black text-xs"></div>
+        </div>
+    </div>
+    <div id="print-section" class="hidden p-6 max-w-4xl mx-auto bg-white text-black font-mono"></div>
+
+    <script>
+        // ফায়ারবেস ডাটাবেস সংযোগ সেটিংস কনফিগারেশন
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2FqJBEEWIKdPvtVxLkhvS5pL7bM7S7vA",
+            authDomain: "erp-software-d0720.firebaseapp.com",
+            projectId: "erp-software-d0720",
+            storageBucket: "erp-software-d0720.firebasestorage.app",
+            messagingSenderId: "1093542483357",
+            appId: "1:1093542483357:web:e843ea3c6651bf87dd0b74"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // গ্লোবাল ভেরিয়েবল ডিফাইন করার স্ট্যাক এরিয়া
+        let globalSettings = [], globalParties = [], globalRates = [], globalInvoices = [], currentUserRole = "", rowCounter = 0;
+        let currentModalPayload = null, currentFormattedDateStr = "";
+        
+        // মাল্টিপল উইন্ডো ওএস এর ব্যাকএন্ড হিস্ট্রি এবং জেড-ইনডেক্স ট্র্যাকিং ম্যানেজমেন্ট
+        let windowHistoryStack = [], activeHighestZIndex = 20;
+
+        function openOSWindow(id) {
+            let el = document.getElementById(id); if(!el) return;
+            el.classList.remove('hidden'); 
+            activeHighestZIndex++; 
+            el.style.zIndex = activeHighestZIndex;
+            
+            windowHistoryStack = windowHistoryStack.filter(w => w !== id);
+            windowHistoryStack.push(id);
+            
+            if(id === 'challan-view' && rowCounter === 0) { resetChallanForm(); }
+            if(id === 'control-view') { renderControlPanelUI(); }
+        }
+
+        function closeOSWindow(id) {
+            let el = document.getElementById(id); if(el) el.classList.add('hidden');
+            windowHistoryStack = windowHistoryStack.filter(w => w !== id);
+        }
+
+        function closeActiveWindow() { 
+            if(windowHistoryStack.length > 0) { 
+                let topWin = windowHistoryStack.pop(); 
+                document.getElementById(topWin).classList.add('hidden'); 
+            } 
+        }
+
         function minimizeAllWindows() { 
             windowHistoryStack.forEach(id => document.getElementById(id).classList.add('hidden')); 
             windowHistoryStack = []; 
         }
 
-        // মাউস এবং মোবাইল টাচ স্ক্রিন উভয়ের জন্য উইন্ডো ড্র্যাগ করার ইউনিভার্সাল ব্যাকএন্ড ইঞ্জিন
+        // মাউস ও মোবাইলের জন্য ইউনিফাইড ড্র্যাগ (নাড়াচাড়া) ইঞ্জিন
         function initDrag(e, id) {
-            if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return; 
-            
-            let win = document.getElementById(id); 
-            activeHighestZIndex++; 
+            if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+            let win = document.getElementById(id);
+            activeHighestZIndex++;
             win.style.zIndex = activeHighestZIndex;
-            
-            // মাউস ক্লিক অথবা মোবাইল টাচ স্টার্ট ইভেন্ট ডাটা গ্রহণ
-            let isTouch = e.type === 'touchstart';
+
+            let isTouch = e.type.startsWith('touch');
             let startX = isTouch ? e.touches[0].clientX : e.clientX;
             let startY = isTouch ? e.touches[0].clientY : e.clientY;
-            
             let initialLeft = win.offsetLeft;
             let initialTop = win.offsetTop;
-            
-            // স্ক্রিন মুভমেন্ট ট্র্যাকিং লজিক (মাউস বা টাচ মুভ)
-            function doDrag(ev) {
-                let currentX = ev.type === 'touchmove' ? ev.touches[0].clientX : ev.clientX;
-                let currentY = ev.type === 'touchmove' ? ev.touches[0].clientY : ev.clientY;
-                
-                win.style.left = (initialLeft + currentX - startX) + 'px';
-                win.style.top = (initialTop + currentY - startY) + 'px';
+
+            function moveHandler(ev) {
+                let curX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+                let curY = ev.type.startsWith('touch') ? ev.touches[0].clientY : ev.clientY;
+                win.style.left = (initialLeft + curX - startX) + 'px';
+                win.style.top = (initialTop + curY - startY) + 'px';
             }
-            
-            // ড্র্যাগিং বন্ধ করার ইভেন্ট রিমুভার লজিক
-            function stopDrag() { 
-                if (isTouch) {
-                    document.removeEventListener('touchmove', doDrag);
-                    document.removeEventListener('touchend', stopDrag);
-                } else {
-                    document.removeEventListener('mousemove', doDrag); 
-                    document.removeEventListener('mouseup', stopDrag); 
+
+            function stopHandler() {
+                document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+                document.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopHandler);
+            }
+
+            document.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
+            document.addEventListener(isTouch ? 'touchend' : 'mouseup', stopHandler);
+        }
+
+        // মাউস ও মোবাইলের জন্য ডেডিকেটেড রিসাইজ (ছোট-বড়) ইঞ্জিন
+        function initResize(e, id) {
+            e.stopPropagation();
+            let win = document.getElementById(id);
+            let isTouch = e.type.startsWith('touch');
+            let startX = isTouch ? e.touches[0].clientX : e.clientX;
+            let startY = isTouch ? e.touches[0].clientY : e.clientY;
+            let initialWidth = win.offsetWidth;
+            let initialHeight = win.offsetHeight;
+
+            function moveHandler(ev) {
+                let curX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+                let curY = ev.type.startsWith('touch') ? ev.touches[0].clientY : ev.clientY;
+                win.style.width = (initialWidth + curX - startX) + 'px';
+                win.style.height = (initialHeight + curY - startY) + 'px';
+            }
+
+            function stopHandler() {
+                document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+                document.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopHandler);
+            }
+
+            document.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
+            document.addEventListener(isTouch ? 'touchend' : 'mouseup', stopHandler);
+        }
+
+        // পেজ লোড হওয়ার সাথে সাথে সমস্ত উইন্ডোতে মোবাইল টাচ এবং রিসাইজ হ্যান্ডেলার ম্যাপিং লুপ
+        document.addEventListener("DOMContentLoaded", () => {
+            const windows = ['challan-view', 'statement-view', 'control-view'];
+            windows.forEach(id => {
+                let win = document.getElementById(id);
+                if(win) {
+                    // টাইটেল বারে মোবাইল টাচ ইভেন্ট যুক্ত করা
+                    let header = win.querySelector('.os-window-header');
+                    if(header) {
+                        header.addEventListener('touchstart', (e) => initDrag(e, id), { passive: true });
+                    }
+                    // উইন্ডোর নিচে ডান কোনায় রিসাইজ বাটন বা হ্যান্ডেল তৈরি করা
+                    let handle = document.createElement('div');
+                    handle.className = 'resize-handle';
+                    handle.addEventListener('mousedown', (e) => initResize(e, id));
+                    handle.addEventListener('touchstart', (e) => initResize(e, id), { passive: true });
+                    win.appendChild(handle);
                 }
-            }
+            });
+        });
+
             
             if (isTouch) {
                 // মোবাইলের স্ক্রিন স্ক্রোল হওয়া বন্ধ করবে ড্র্যাগ করার সময়
