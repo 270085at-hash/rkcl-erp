@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rony Knit Composite Ltd - ERP</title>
     <link rel="manifest" href="./manifest.json">
     <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
@@ -13,7 +13,8 @@
     <style>
         /* প্রিন্ট করার জন্য সিএসএস রুলস */
         @media print { body * { visibility: hidden; } #print-section, #print-section * { visibility: visible; } #print-section { position: absolute; left: 0; top: 0; width: 100%; } }
-        body { -webkit-user-select: none; user-select: none; overflow: hidden; background-color: #d1d5db; font-family: sans-serif; touch-action: none; }
+        /* touch-action এবং overflow হ্যান্ডলিং ঠিক করা হয়েছে যাতে স্ক্রল ও জুম আটকে না যায় */
+        body { -webkit-user-select: none; user-select: none; background-color: #d1d5db; font-family: sans-serif; }
         .excel-box { border: 1px solid #7f8c8d !important; }
         .excel-table th, .excel-table td { border: 1px solid #7f8c8d !important; padding: 3px !important; }
         input:focus, select:focus { background-color: #eff6ff !important; outline: none; }
@@ -21,16 +22,16 @@
         
         /* উইন্ডো ইঞ্জিন এবং স্ক্রিন রেশিও অনুযায়ী ফন্ট ছোট-বড় করার সিএসএস */
         .os-window { position: absolute; min-width: 280px; min-height: 200px; background: #eef2f3; border: 2px solid #57606f; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); display: flex; flex-direction: column; z-index: 10; overflow: hidden; container-type: inline-size; }
-        .os-window-header { background: linear-gradient(to bottom, #747d8c, #2f3542); color: white; padding: 5px 10px; cursor: move; display: flex; justify-content: space-between; align-items: center; user-select: none; border-b: 1px solid #1e272e; touch-action: none; }
+        .os-window-header { background: linear-gradient(to bottom, #747d8c, #2f3542); color: white; padding: 5px 10px; cursor: move; display: flex; justify-content: space-between; align-items: center; user-select: none; border-b: 1px solid #1e272e; }
         
         /* কন্টেইনার কুয়েরি টেক্সট অটো-সাইজার লজিক */
         .os-window-body { flex: 1; overflow: auto; padding: 10px; font-size: max(10px, 1.35cqw) !important; }
         .os-window-body input, .os-window-body select, .os-window-body button, .os-window-body table { font-size: max(9px, 1.15cqw) !important; }
         
-        /* মোবাইলের জন্য উইন্ডোর নিচে ডানদিকের রিসাইজ গ্রিপ বাটন */
-        .resize-handle { position: absolute; right: 0; bottom: 0; width: 20px; height: 20px; cursor: se-resize; background: linear-gradient(135deg, transparent 50%, #57606f 50%); z-index: 9999; touch-action: none; }
+        /* উইন্ডোর নিচে ডানদিকের রিসাইজ গ্রিপ বাটন */
+        .resize-handle { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; cursor: se-resize; background: linear-gradient(135deg, transparent 50%, #57606f 50%); z-index: 9999; }
 
-        /* ক্লাসিক সফটওয়্যার স্টাইল বাটন ডিজাইন */
+        /* ক্লাসিকソフトওয়্যার স্টাইল বাটন ডিজাইন */
         .vb-btn { background: linear-gradient(to bottom, #ffffff, #e0e0e0); border: 1px solid #7f8c8d; box-shadow: inset 1px 1px 0px #fff, 1px 1px 2px rgba(0,0,0,0.2); color: #000; font-weight: bold; padding: 4px 14px; border-radius: 3px; cursor: pointer; transition: all 0.1s; }
         .vb-btn:active { background: #dcdde1; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
         .vb-btn:disabled { color: #a4b0be; cursor: not-allowed; }
@@ -42,6 +43,7 @@
     </style>
 </head>
 <body class="text-gray-900" oncontextmenu="return false;">
+
 
     <div id="login-page" class="fixed inset-0 bg-gray-300 flex items-center justify-center z-[100] p-4">
         <div class="bg-white border-2 border-slate-700 p-6 rounded shadow-2xl w-full max-w-sm">
@@ -388,7 +390,7 @@
                 document.addEventListener('mouseup', stopDrag);
             }
         }
-              // ডিফল্ট ডেট ফরম্যাট কনভার্ট করে DD-MMM-YYYY করার মেথড
+                      // ডিফল্ট ডেট ফরম্যাট কনভার্ট করে DD-MMM-YYYY করার মেথড
         function parseSystemFormattedDate(inputDate) {
             if(!inputDate) return "";
             const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -397,15 +399,23 @@
         }
         function convertAndDisplayDate(val) { currentFormattedDateStr = parseSystemFormattedDate(val); document.getElementById('formattedDateLabel').innerText = currentFormattedDateStr; }
 
-        // সিকিউর ইউজার অথেন্টিকেশন হ্যান্ডলার মেথড
+        // সিকিউর ইউজার অথেন্টিকেশন হ্যান্ডলার মেথড (মোবাইল লগইন ফিক্সড)
         async function handleSecureLogin(e) {
-            e.preventDefault();
-            let u = document.getElementById('loginUser').value.trim().toLowerCase(), p = document.getElementById('loginPass').value;
+            if(e) { e.preventDefault(); e.stopPropagation(); }
+            
+            let u = document.getElementById('loginUser').value.trim().toLowerCase();
+            let p = document.getElementById('loginPass').value;
+            
             if((u === 'admin' && p === 'html') || (u === 'dye' && p === 'dye')) {
-                currentUserRole = u; document.getElementById('login-page').classList.add('hidden');
+                currentUserRole = u; 
+                document.getElementById('login-page').classList.add('hidden');
                 document.getElementById('app-interface').classList.remove('hidden');
-                document.getElementById('user-badge').innerText = `(${u})`; startLiveSystemSync();
-            } else { document.getElementById('login-error').classList.remove('hidden'); }
+                document.getElementById('user-badge').innerText = `(${u})`; 
+                startLiveSystemSync();
+            } else { 
+                let errBox = document.getElementById('login-error');
+                if(errBox) errBox.classList.remove('hidden'); 
+            }
         }
 
         // ফায়ারবেস ক্লাউড মেমোরি থেকে লাইভ ডাটা রিয়েলটাইম সিঙ্ক্রোনাইজেশন লুপ
@@ -422,7 +432,9 @@
         // ক্লায়েন্ট ড্রপডাউন সিলেক্টর জেনারেটর কোড
         function buildMainDatalists() {
             let partySel = document.getElementById('invPartyInput');
-            partySel.innerHTML = '<option value="">-- Party Code Registry --</option>' + globalParties.map(p => `<option value="${p.customer_name} - ${p.customer_code}">${p.customer_name} - ${p.customer_code}</option>`).join('');
+            if(partySel) {
+                partySel.innerHTML = '<option value="">-- Party Code Registry --</option>' + globalParties.map(p => `<option value="${p.customer_name} - ${p.customer_code}">${p.customer_name} - ${p.customer_code}</option>`).join('');
+            }
         }
         
         // চালান এবং বিল ইনস্ট্যান্ট সার্চ সাজেশন ফিল্টারিং ইঞ্জিন
@@ -438,6 +450,7 @@
         }
         function selectSearchedChallan(num) { document.getElementById('searchChallanInput').value = num; document.getElementById('challanSuggestions').classList.add('hidden'); let m = globalInvoices.find(i=>i.challan_no == num); if(m) pFWI(m); }
         function selectSearchedBill(num) { document.getElementById('searchBillInput').value = num; document.getElementById('billSuggestions').classList.add('hidden'); let m = globalInvoices.find(i=>i.bill_no == num); if(m) pFWI(m); }
+
               // অটোমেটিক পরবর্তী চালান সিরিয়াল কাউন্টার সেট করার মেথড
         function calculateNextNos() { let nextC = 1; if(globalInvoices.length) { nextC = Math.max(...globalInvoices.map(i => parseInt(i.challan_no) || 0)) + 1; } document.getElementById('invChallanNo').value = String(nextC).padStart(2, '0'); }
         
