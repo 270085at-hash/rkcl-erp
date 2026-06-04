@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rony Knit Composite Ltd - ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { background-color: #d1d5db; font-family: sans-serif; user-select: none; }
+        .os-window { position: absolute; background: #eef2f3; border: 2px solid #57606f; box-shadow: 0 15px 35px rgba(0,0,0,0.35); display: flex; flex-direction: column; z-index: 10; }
+        .os-window-header { background: #2f3542; color: white; padding: 5px; cursor: move; display: flex; justify-content: space-between; align-items: center; }
+        .os-window-body { flex: 1; padding: 10px; overflow: auto; }
+        .vb-btn { background: #e0e0e0; border: 1px solid #7f8c8d; padding: 4px 10px; cursor: pointer; font-weight: bold; }
+        .excel-table th, .excel-table td { border: 1px solid #7f8c8d; padding: 4px; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+  <div id="login-page" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[9999]">
+    <div class="bg-slate-800 p-6 rounded shadow-2xl w-80 text-white">
+        <h1 class="text-center font-bold text-blue-400">RONY KNIT COMPOSITE</h1>
+        <form onsubmit="handleSecureLogin(event); return false;" class="mt-4">
+            <input type="text" id="loginUser" class="w-full p-2 mb-2 text-black" placeholder="USER ID" required>
+            <input type="password" id="loginPass" class="w-full p-2 mb-2 text-black" placeholder="PASSWORD" required>
+            <button type="submit" class="w-full bg-blue-600 p-2 font-bold">LOGIN</button>
+        </form>
+    </div>
+  </div>
+  <div id="app-interface" class="hidden">
+    <header class="bg-slate-800 p-2 flex gap-2">
+        <button onclick="openOSWindow('challan-view')" class="vb-btn">📝 Challan</button>
+        <button onclick="openOSWindow('statement-view')" class="vb-btn">📊 Statement</button>
+        <button onclick="openOSWindow('control-view')" class="vb-btn">⚙️ Control</button>
+    </header>
+    <div id="challan-view" class="os-window hidden w-[90%] h-[80%] left-[5%] top-[10%]">
+    <div class="os-window-header" onmousedown="initDrag(event, 'challan-view')"><span>Challan</span><button onclick="closeOSWindow('challan-view')">X</button></div>
+    <div class="os-window-body">
+        <input type="number" id="invChallanNo" placeholder="Challan No" class="border">
+        <select id="invPartyInput"></select>
+        <table class="w-full excel-table" id="challan-items-table">
+            <thead><tr><th>SL</th><th>Particulars</th><th>Weight</th><th>Amount</th></tr></thead>
+            <tbody id="challanDynamicRows"></tbody>
+        </table>
+        <button onclick="triggerInvoiceSaveOperation()" class="bg-blue-600 text-white p-2 mt-2">Save</button>
+    </div>
+    </div>
+          <div id="statement-view" class="os-window hidden w-[80%] h-[70%] left-[10%] top-[10%]">
+    <div class="os-window-header" onmousedown="initDrag(event, 'statement-view')"><span>Statement</span><button onclick="closeOSWindow('statement-view')">X</button></div>
+    <div class="os-window-body"><table class="w-full excel-table"><tbody id="statementTableBody"></tbody></table></div>
+          </div>
+          <div id="control-view" class="os-window hidden w-[50%] h-[60%] left-[25%] top-[10%]">
+    <div class="os-window-header" onmousedown="initDrag(event, 'control-view')"><span>Control</span><button onclick="closeOSWindow('control-view')">X</button></div>
+    <div class="os-window-body">
+        <input type="text" id="regPartyName" placeholder="Party Name"><button onclick="saveNewPartyRegistry()">Add Party</button>
+    </div>
+            </div>
+            <script>
+const firebaseConfig = { /* আপনার কনফিগ এখানে */ };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+function openOSWindow(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeOSWindow(id) { document.getElementById(id).classList.add('hidden'); }
+            </script>
+            function initDrag(e, id) {
+    let win = document.getElementById(id);
+    let x = e.clientX - win.offsetLeft, y = e.clientY - win.offsetTop;
+    function move(e) { win.style.left = (e.clientX - x) + 'px'; win.style.top = (e.clientY - y) + 'px'; }
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', () => document.removeEventListener('mousemove', move));
+}
+    async function triggerInvoiceSaveOperation() {
+    let data = { challan_no: document.getElementById('invChallanNo').value };
+    await db.collection("invoices").add(data);
+    alert("Saved!");
+}
+    async function handleSecureLogin(e) {
+    e.preventDefault();
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('app-interface').classList.remove('hidden');
+}
+</script></body></html>
