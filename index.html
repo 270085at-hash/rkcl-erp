@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rony Knit Composite Ltd - ERP</title>
+    <link rel="manifest" href="./manifest.json">
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <style>
+        /* প্রিন্ট করার জন্য সিএসএস রুলস */
+        @media print { body * { visibility: hidden; } #print-section, #print-section * { visibility: visible; } #print-section { position: absolute; left: 0; top: 0; width: 100%; } }
+        
+        body { -webkit-user-select: none; user-select: none; background-color: #d1d5db; font-family: sans-serif; }
+        .excel-box { border: 1px solid #7f8c8d !important; }
+        .excel-table th, .excel-table td { border: 1px solid #7f8c8d !important; padding: 3px !important; }
+        input:focus, select:focus { background-color: #eff6ff !important; outline: none; }
+        .suggestions-box { max-height: 200px; overflow-y: auto; z-index: 100; position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid black; }
+        
+        /* উইন্ডো ইঞ্জিন সিএসএস */
+        .os-window { position: absolute; min-width: 280px; min-height: 200px; background: #eef2f3; border: 2px solid #57606f; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); display: flex; flex-direction: column; z-index: 10; overflow: hidden; container-type: inline-size; }
+        .os-window-header { background: linear-gradient(to bottom, #747d8c, #2f3542); color: white; padding: 5px 10px; cursor: move; display: flex; justify-content: space-between; align-items: center; user-select: none; border-b: 1px solid #1e272e; }
+        
+        /* টেক্সট অটো-সাইজার লজিক */
+        .os-window-body { flex: 1; overflow: auto; padding: 10px; font-size: max(10px, 1.35cqw) !important; }
+        .os-window-body input, .os-window-body select, .os-window-body button, .os-window-body table { font-size: max(9px, 1.15cqw) !important; }
+        
+        /* উইন্ডোর নিচে ডানদিকের রিসাইজ গ্রিপ বাটন */
+        .resize-handle { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; cursor: se-resize; background: linear-gradient(135deg, transparent 50%, #57606f 50%); z-index: 9999; }
+
+        /* ক্লাসিক বাটন ডিজাইন */
+        .vb-btn { background: linear-gradient(to bottom, #ffffff, #e0e0e0); border: 1px solid #7f8c8d; box-shadow: inset 1px 1px 0px #fff, 1px 1px 2px rgba(0,0,0,0.2); color: #000; font-weight: bold; padding: 4px 14px; border-radius: 3px; cursor: pointer; transition: all 0.1s; }
+        .vb-btn:active { background: #dcdde1; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
+        .vb-btn:disabled { color: #a4b0be; cursor: not-allowed; }
+
+        .custom-date-container { position: relative; display: inline-block; }
+        .custom-date-container input[type="date"] { color: transparent; background: transparent; position: relative; z-index: 2; }
+        .custom-date-container input[type="date"]:focus { color: #000; }
+        .custom-date-text { position: absolute; left: 6px; top: 4px; z-index: 1; font-weight: bold; color: #2f3542; pointer-events: none; }
+    </style>
+</head>
+<body class="text-gray-900" oncontextmenu="return false;">
+      <div id="login-page" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-[9999]">
+        <div class="bg-slate-800 border-2 border-slate-700 p-6 rounded shadow-2xl w-full max-w-sm font-mono text-white">
+            <div class="text-center mb-4">
+                <h1 class="text-sm font-bold tracking-wider text-blue-400">RONY KNIT COMPOSITE LTD.</h1>
+                <p class="text-[10px] text-gray-400 mt-1">Central Cloud ERP Network v4.0</p>
+            </div>
+            <form onsubmit="handleSecureLogin(event); return false;" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1">USER INTEGRATION KEY</label>
+                    <input type="text" id="loginUser" class="w-full bg-slate-950 border border-slate-600 p-2 text-xs rounded font-bold uppercase text-emerald-400 text-center" placeholder="ENTER USER ID" required autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1">AUTHENTICATION GATEWAY PASSWORD</label>
+                    <input type="password" id="loginPass" class="w-full bg-slate-950 border border-slate-600 p-2 text-xs rounded font-bold text-emerald-400 text-center" placeholder="••••••••" required>
+                </div>
+                <div id="login-error" class="hidden text-red-400 text-[10px] font-bold text-center bg-red-950/50 p-1.5 border border-red-800 rounded">
+                    ❌ ERROR: INVALID IDENTITY OR ACCESS KEY
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 text-xs rounded tracking-wider transition-colors shadow-lg shadow-blue-900/30">
+                    SECURE LOG-IN TERMINAL
+                </button>
+            </form>
+        </div>
+      </div>
+          <div id="app-interface" class="hidden min-h-screen flex flex-col">
+        <header class="bg-slate-800 border-b-2 border-slate-950 p-1.5 flex justify-between items-center text-white font-mono shadow-md">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold tracking-tight text-blue-400">Rony ERP OS Terminal <span id="user-badge" class="text-emerald-400">()</span></span>
+            </div>
+            <div class="flex gap-1">
+                <button onclick="openOSWindow('challan-view')" class="vb-btn text-[11px] font-bold">📝 Delivery Challan Engine</button>
+                <button onclick="openOSWindow('statement-view')" class="vb-btn text-[11px] font-bold">📊 Realtime Ledger & Statement</button>
+                <button onclick="openOSWindow('control-view')" class="vb-btn text-[11px] font-bold text-blue-700">⚙️ Control Panel</button>
+                <button onclick="window.location.reload()" class="vb-btn text-[11px] font-bold text-red-600">🔌 Log Out</button>
+            </div>
+        </header>
+
+        <main class="flex-1 relative overflow-hidden p-4">
+                      <div id="challan-view" class="os-window hidden w-[90%] h-[82vh] left-[5%] top-[5px]">
+                <header class="os-window-header" onmousedown="initDrag(event, 'challan-view')">
+                    <span class="text-xs font-bold">Challan and Bill Record System</span>
+                    <button onclick="closeOSWindow('challan-view')" class="bg-red-600 text-white text-[10px] px-1.5 rounded font-bold">X</button>
+                </header>
+                <div class="os-window-body font-sans text-xs">
+                    <div class="bg-white border border-gray-400 p-3 rounded shadow-sm mb-3">
+                        <div class="grid grid-cols-4 gap-2 mb-2">
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-0.5">Challan No</label>
+                                <input type="number" id="invChallanNo" class="w-full border border-gray-400 p-1 rounded font-bold text-blue-700 bg-gray-50" readonly>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-0.5">Bill No</label>
+                                <input type="number" id="invBillNo" class="w-full border border-gray-400 p-1 rounded font-bold text-emerald-700 bg-gray-50" readonly>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-0.5">Select Party Registered</label>
+                                <select id="invPartyInput" class="w-full border border-gray-400 p-1 rounded font-bold" onchange="syncSelectedPartyRates()"></select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-0.5">System Date (DD-MMM-YYYY)</label>
+                                <div class="custom-date-container w-full">
+                                    <input type="date" id="invDate" class="w-full border border-gray-400 p-1 rounded font-bold" onchange="convertAndDisplayDate(this.value)">
+                                    <span id="formattedDateLabel" class="custom-date-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-0.5">Driver Mobile</label>
+                                <input type="text" id="invDriverMobile" class="w-full border border-gray-400 p-1 rounded font-bold">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-0.5">Vehicle Number</label>
+                                <input type="text" id="invVehicleNo" class="w-full border border-gray-400 p-1 rounded font-bold">
+                            </div>
+                            <div class="col-span-2 flex items-end justify-end gap-1.5">
+                                <button onclick="triggerInvoiceSaveOperation()" class="bg-blue-600 text-white font-bold px-4 py-1.5 rounded shadow text-xs">💾 Save Transaction</button>
+                                <button onclick="resetChallanForm()" class="bg-gray-500 text-white font-bold px-3 py-1.5 rounded shadow text-xs">🔄 Reset Sheet</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-400 rounded overflow-hidden shadow-sm">
+                        <table class="w-full text-left border-collapse" id="challan-items-table">
+                            <thead>
+                                <tr class="bg-slate-700 text-white font-bold text-[11px]">
+                                    <th class="p-1.5 border border-slate-600 text-center w-8">SL</th>
+                                    <th class="p-1.5 border border-slate-600">Particulars / Process Description</th>
+                                    <th class="p-1.5 border border-slate-600 text-center w-24">Color</th>
+                                    <th class="p-1.5 border border-slate-600 text-center w-20">Batch No</th>
+                                    <th class="p-1.5 border border-slate-600 text-center w-16">Roll</th>
+                                    <th class="p-1.5 border border-slate-600 text-right w-20">Dia</th>
+                                    <th class="p-1.5 border border-slate-600 text-right w-20">G.G</th>
+                                    <th class="p-1.5 border border-slate-600 text-right w-24">Weight (Kg)</th>
+                                    <th class="p-1.5 border border-slate-600 text-right w-20">Rate</th>
+                                    <th class="p-1.5 border border-slate-600 text-right w-28">Amount (TK)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="challanDynamicRows"></tbody>
+                            <tfoot>
+                                <tr class="bg-gray-100 font-bold border-t border-gray-400 text-slate-800">
+                                    <td colspan="4" class="p-1.5 text-right font-bold text-blue-700">GRAND TOTAL CONTROL INTELLIGENCE:</td>
+                                    <td id="totRoll" class="p-1.5 text-center font-bold text-slate-900">0</td>
+                                    <td colspan="2"></td>
+                                    <td id="totWeight" class="p-1.5 text-right font-bold text-slate-900">0.00</td>
+                                    <td></td>
+                                    <td id="totAmount" class="p-1.5 text-right font-bold text-emerald-700">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="statement-view" class="os-window hidden w-[85%] h-[80vh] left-[8%] top-[30px]">
+                <header class="os-window-header" onmousedown="initDrag(event, 'statement-view')">
+                    <span class="text-xs font-bold">Realtime Engine Statement Ledger</span>
+                    <button onclick="closeOSWindow('statement-view')" class="bg-red-600 text-white text-[10px] px-1.5 rounded font-bold">X</button>
+                </header>
+                <div class="os-window-body font-sans text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white border border-gray-400 p-3 rounded shadow-sm">
+                            <h4 class="font-bold border-b border-gray-300 pb-1 mb-2 text-blue-700 text-xs">Add New Party Registry</h4>
+                            <div class="space-y-2">
+                                <input type="text" id="regPartyName" placeholder="Party Name" class="w-full border border-gray-400 p-1.5 rounded font-bold text-xs">
+                                <input type="text" id="regPartyCode" placeholder="Party Unique Code" class="w-full border border-gray-400 p-1.5 rounded font-bold text-xs">
+                                <button onclick="saveNewPartyRegistry()" class="w-full bg-blue-600 text-white font-bold py-1.5 rounded text-xs">Add Party Node</button>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-gray-400 p-3 rounded shadow-sm">
+                            <h4 class="font-bold border-b border-gray-300 pb-1 mb-2 text-emerald-700 text-xs">Set Party Process Rates</h4>
+                            <div class="space-y-2">
+                                <select id="ratePartySelect" class="w-full border border-gray-400 p-1.5 rounded font-bold text-xs"></select>
+                                <select id="rateParticularSelect" class="w-full border border-gray-400 p-1.5 rounded font-bold text-xs"></select>
+                                <input type="number" id="rateValueInput" placeholder="Rate (TK / Kg)" class="w-full border border-gray-400 p-1.5 rounded font-bold text-xs">
+                                <button onclick="saveParticularRateConfiguration()" class="w-full bg-emerald-600 text-white font-bold py-1.5 rounded text-xs">Lock Configuration Rate</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-400 rounded mt-3 overflow-hidden shadow-sm">
+                        <div class="bg-slate-700 text-white font-bold p-1.5 text-xs">Active Registry Base Monitor</div>
+                        <div class="max-h-48 overflow-y-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 font-bold border-b border-gray-300 text-[11px] text-slate-700">
+                                        <th class="p-1.5 border-r">Party Registered Code Name</th>
+                                        <th class="p-1.5 text-center w-24">Command</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partyRegistryMonitorTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+        <div id="report-modal" class="fixed inset-0 bg-black/70 z-[200] hidden flex items-center justify-center p-4">
+        <div class="bg-white border-2 border-black w-full max-w-4xl rounded flex flex-col max-h-[90vh]">
+            <header class="bg-gray-100 border-b border-gray-400 p-2 flex justify-between items-center">
+                <h3 id="report-modal-title" class="text-xs font-bold text-slate-800">Print Preview Engine</h3>
+                <div class="flex gap-1.5">
+                    <button onclick="triggerPrintEngine()" class="bg-blue-600 text-white text-xs px-2.5 py-1 font-bold rounded">🖨️ Document Print</button>
+                    <button onclick="triggerExcelExport()" class="bg-emerald-600 text-white text-xs px-2.5 py-1 font-bold rounded">📊 Export Excel</button>
+                    <button onclick="closeReportModal()" class="bg-red-600 text-white text-xs px-2.5 py-1 font-bold rounded">Close Viewer</button>
+                </div>
+            </header>
+            <div id="report-modal-body" class="p-4 overflow-y-auto flex-1 bg-white font-mono text-black text-xs"></div>
+        </div>
+    </div>
+    <div id="print-section" class="hidden p-6 max-w-4xl mx-auto bg-white text-black font-mono"></div>
+
+    <script>
+        // ফায়ারবেস ডাটাবেস সংযোগ সেটিংস কনফিগারেশন
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2FqJBEEWIKdPvtVxLkhvS5pL7bM7S7vA",
+            authDomain: "erp-software-d0720.firebaseapp.com",
+            projectId: "erp-software-d0720",
+            storageBucket: "erp-software-d0720.firebasestorage.app",
+            messagingSenderId: "1093542483357",
+            appId: "1:1093542483357:web:e843ea3c6651bf87dd0b74"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        let globalSettings = [], globalParties = [], globalRates = [], globalInvoices = [], currentUserRole = "", rowCounter = 0;
+        let currentModalPayload = null, currentFormattedDateStr = "";
+        let windowHistoryStack = [], activeHighestZIndex = 20;
+
+        function openOSWindow(id) {
+            let el = document.getElementById(id); if(!el) return;
+            el.classList.remove('hidden'); 
+            activeHighestZIndex++; 
+            el.style.zIndex = activeHighestZIndex;
+            
+            windowHistoryStack = windowHistoryStack.filter(w => w !== id);
+            windowHistoryStack.push(id);
+            
+            if(id === 'challan-view' && rowCounter === 0) { resetChallanForm(); }
+            if(id === 'control-view') { renderControlPanelUI(); }
+        }
+
+        function closeOSWindow(id) {
+            let el = document.getElementById(id); if(el) el.classList.add('hidden');
+            windowHistoryStack = windowHistoryStack.filter(w => w !== id);
+        }
+              function closeActiveWindow() { 
+            if(windowHistoryStack.length > 0) { 
+                let topWin = windowHistoryStack.pop(); 
+                document.getElementById(topWin).classList.add('hidden'); 
+            } 
+        }
+
+        function minimizeAllWindows() { 
+            windowHistoryStack.forEach(id => document.getElementById(id).classList.add('hidden')); 
+            windowHistoryStack = []; 
+        }
+
+        function initDrag(e, id) {
+            if(e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            let win = document.getElementById(id);
+            activeHighestZIndex++;
+            win.style.zIndex = activeHighestZIndex;
+
+            let isTouch = e.type.startsWith('touch');
+            let startX = isTouch ? e.touches[0].clientX : e.clientX;
+            let startY = isTouch ? e.touches[0].clientY : e.clientY;
+            let initialLeft = win.offsetLeft;
+            let initialTop = win.offsetTop;
+
+            function moveHandler(ev) {
+                let curX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+                let curY = ev.type.startsWith('touch') ? ev.touches[0].clientY : ev.clientY;
+                win.style.left = (initialLeft + curX - startX) + 'px';
+                win.style.top = (initialTop + curY - startY) + 'px';
+            }
+
+            function stopHandler() {
+                document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+                document.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopHandler);
+            }
+
+            if(isTouch) {
+                document.addEventListener('touchmove', moveHandler, { passive: false });
+                document.addEventListener('touchend', stopHandler);
+            } else {
+                document.addEventListener('mousemove', moveHandler);
+                document.addEventListener('mouseup', stopHandler);
+            }
+      }
+              function initResize(e, id) {
+            e.stopPropagation();
+            let win = document.getElementById(id);
+            let isTouch = e.type.startsWith('touch');
+            let startX = isTouch ? e.touches[0].clientX : e.clientX;
+            let startY = isTouch ? e.touches[0].clientY : e.clientY;
+            let initialWidth = win.offsetWidth;
+            let initialHeight = win.offsetHeight;
+
+            function moveHandler(ev) {
+                let curX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+                let curY = ev.type.startsWith('touch') ? ev.touches[0].clientY : ev.clientY;
+                win.style.width = (initialWidth + curX - startX) + 'px';
+                win.style.height = (initialHeight + curY - startY) + 'px';
+            }
+
+            function stopHandler() {
+                document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+                document.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopHandler);
+            }
+
+            if(isTouch) {
+                document.addEventListener('touchmove', moveHandler, { passive: false });
+                document.addEventListener('touchend', stopHandler);
+            } else {
+                document.addEventListener('mousemove', moveHandler);
+                document.addEventListener('mouseup', stopHandler);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const windows = ['challan-view', 'statement-view', 'control-view'];
+            windows.forEach(id => {
+                let win = document.getElementById(id);
+                if(win) {
+                    let header = win.querySelector('.os-window-header');
+                    if(header) {
+                        header.addEventListener('touchstart', (e) => initDrag(e, id), { passive: true });
+                    }
+                    let handle = document.createElement('div');
+                    handle.className = 'resize-handle';
+                    handle.addEventListener('mousedown', (e) => initResize(e, id));
+                    handle.addEventListener('touchstart', (e) => initResize(e, id), { passive: true });
+                    win.appendChild(handle);
+                }
+            });
+        });
+              // ৬ষ্ঠ অংশ: তারিখ, ফিক্সড লগইন অথেন্টিকেশন এবং লাইভ ডাটা সিঙ্ক্রোনাইজেশন
+        function parseSystemFormattedDate(inputDate) {
+            if(!inputDate) return "";
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            let d = new Date(inputDate); if(isNaN(d.getTime())) return "";
+            return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+        }
+        function convertAndDisplayDate(val) { currentFormattedDateStr = parseSystemFormattedDate(val); document.getElementById('formattedDateLabel').innerText = currentFormattedDateStr; }
+
+        // মোবাইল টাচ রেসপন্সিভ লগইন মেকানিজম
+        async function handleSecureLogin(e) {
+            if(e) { e.preventDefault(); e.stopPropagation(); }
+            let u = document.getElementById('loginUser').value.trim().toLowerCase();
+            let p = document.getElementById('loginPass').value;
+            
+            if((u === 'admin' && p === 'html') || (u === 'dye' && p === 'dye')) {
+                currentUserRole = u; 
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('app-interface').classList.remove('hidden');
+                document.getElementById('user-badge').innerText = `(${u})`; 
+                startLiveSystemSync();
+            } else { 
+                let errBox = document.getElementById('login-error');
+                if(errBox) errBox.classList.remove('hidden'); 
+            }
+        }
+
+        function startLiveSystemSync() {
+            db.collection("general_settings").onSnapshot(s => { globalSettings = s.docs.map(d => ({id: d.id, ...d.data()})); buildMainDatalists(); });
+            db.collection("customers").onSnapshot(s => { globalParties = s.docs.map(d => ({id: d.id, ...d.data()})); buildMainDatalists(); renderPartyRegistryTable(); });
+            db.collection("customer_rates").onSnapshot(s => globalRates = s.docs.map(d => d.data()));
+            db.collection("invoices").onSnapshot(s => { 
+                globalInvoices = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => parseInt(b.challan_no) - parseInt(a.challan_no)); 
+                renderStatementTable(); calculateNextNos(); 
+            });
+        }
+
+        function buildMainDatalists() {
+            let partySel = document.getElementById('invPartyInput');
+            if(partySel) {
+                partySel.innerHTML = '<option value="">-- Party Code Registry --</option>' + globalParties.map(p => `<option value="${p.customer_name} - ${p.customer_code}">${p.customer_name} - ${p.customer_code}</option>`).join('');
+            }
+        }
+        
+        function filterChallanSearch(val) {
+            let box = document.getElementById('challanSuggestions'); let filtered = globalInvoices.filter(i => i.challan_no.toString().includes(val));
+            if(!filtered.length) { box.classList.add('hidden'); return; }
+            box.innerHTML = filtered.map(i => `<div onclick="selectSearchedChallan('${i.challan_no}')" class="p-1 hover:bg-blue-100 cursor-pointer border-b font-mono font-bold text-slate-800"><b>${i.challan_no}</b></div>`).join(''); box.classList.remove('hidden');
+        }
+        function filterBillSearch(val) {
+            let box = document.getElementById('billSuggestions'); let filtered = globalInvoices.filter(i => i.bill_no.toString().includes(val));
+            if(!filtered.length) { box.classList.add('hidden'); return; }
+            box.innerHTML = filtered.map(i => `<div onclick="selectSearchedBill('${i.bill_no}')" class="p-1 hover:bg-blue-100 cursor-pointer border-b font-mono font-bold text-slate-800"><b>${i.bill_no}</b></div>`).join(''); box.classList.remove('hidden');
+        }
+        function selectSearchedChallan(num) { document.getElementById('searchChallanInput').value = num; document.getElementById('challanSuggestions').classList.add('hidden'); let m = globalInvoices.find(i=>i.challan_no == num); if(m) pFWI(m); }
+        function selectSearchedBill(num) { document.getElementById('searchBillInput').value = num; document.getElementById('billSuggestions').classList.add('hidden'); let m = globalInvoices.find(i=>i.bill_no == num); if(m) pFWI(m); }
+    </script>
+</body>
+</html>
