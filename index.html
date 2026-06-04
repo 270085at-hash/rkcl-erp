@@ -69,18 +69,7 @@ function closeOSWindow(id) { document.getElementById(id).classList.add('hidden')
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', () => document.removeEventListener('mousemove', move));
 }
-    async function triggerInvoiceSaveOperation() {
-    let data = { challan_no: document.getElementById('invChallanNo').value };
-    await db.collection("invoices").add(data);
-    alert("Saved!");
-}
-    async function handleSecureLogin(e) {
-    e.preventDefault();
-    document.getElementById('login-page').classList.add('hidden');
-    document.getElementById('app-interface').classList.remove('hidden');
-}
-</script></body></html>
-// সঠিক লগইন ও ফায়ারবেস অথেন্টিকেশন লজিক
+    // সঠিক লগইন ও ফায়ারবেস অথেন্টিকেশন লজিক
 async function handleSecureLogin(e) {
     if(e) { e.preventDefault(); e.stopPropagation(); }
     
@@ -109,3 +98,9 @@ function startLiveSystemSync() {
     });
 }
 
+    async function handleSecureLogin(e) {
+    e.preventDefault();
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('app-interface').classList.remove('hidden');
+}
+</script></body></html>
