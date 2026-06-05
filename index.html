@@ -11,209 +11,38 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
         @media print {
             body * { visibility: hidden; }
             #print-section, #print-section * { visibility: visible; }
             #print-section { position: absolute; left: 0; top: 0; width: 100%; }
         }
-
         * { box-sizing: border-box; }
-        body {
-            -webkit-user-select: none;
-            user-select: none;
-            font-family: 'DM Sans', sans-serif;
-            background: #f0f2f5;
-        }
-
+        body { -webkit-user-select: none; user-select: none; font-family: 'DM Sans', sans-serif; background: #f0f2f5; margin: 0; }
         .excel-box { border: 1px solid #000 !important; }
         .excel-table th, .excel-table td { border: 1px solid #000 !important; }
         input:focus, select:focus { background-color: #eff6ff !important; outline: none; }
-
-        /* Sidebar */
-        #sidebar {
-            width: 130px;
-            min-width: 130px;
-            background: #1a2340;
-            display: flex;
-            flex-direction: column;
-            padding: 12px 8px;
-            gap: 6px;
-            border-right: 2px solid #0f172a;
-        }
-
-        .sidebar-logo {
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #2d3a5a;
-            margin-bottom: 4px;
-        }
-        .sidebar-logo .company-name {
-            font-size: 9px;
-            font-weight: 700;
-            color: #7dd3fc;
-            line-height: 1.3;
-            letter-spacing: 0.02em;
-        }
-        .sidebar-logo .company-addr {
-            font-size: 7.5px;
-            color: #64748b;
-            line-height: 1.3;
-            margin-top: 2px;
-        }
-
-        .nav-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            background: #243050;
-            border: 1px solid #2d3a5a;
-            border-radius: 6px;
-            padding: 8px 4px;
-            cursor: pointer;
-            color: #94a3b8;
-            font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            text-align: center;
-            transition: all 0.15s;
-            width: 100%;
-        }
-        .nav-btn:hover {
-            background: #2d3f6b;
-            color: #e2e8f0;
-            border-color: #3b5bdb;
-        }
-        .nav-btn.active {
-            background: #1d4ed8;
-            color: #fff;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
-        }
+        #sidebar { width: 130px; min-width: 130px; background: #1a2340; display: flex; flex-direction: column; padding: 12px 8px; gap: 6px; border-right: 2px solid #0f172a; }
+        .sidebar-logo { text-align: center; padding-bottom: 10px; border-bottom: 1px solid #2d3a5a; margin-bottom: 4px; }
+        .sidebar-logo .company-name { font-size: 9px; font-weight: 700; color: #7dd3fc; line-height: 1.3; }
+        .sidebar-logo .company-addr { font-size: 7.5px; color: #64748b; line-height: 1.3; margin-top: 2px; }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; background: #243050; border: 1px solid #2d3a5a; border-radius: 6px; padding: 8px 4px; cursor: pointer; color: #94a3b8; font-size: 9px; font-weight: 600; text-align: center; transition: all 0.15s; width: 100%; }
+        .nav-btn:hover { background: #2d3f6b; color: #e2e8f0; border-color: #3b5bdb; }
+        .nav-btn.active { background: #1d4ed8; color: #fff; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
         .nav-btn .icon { font-size: 16px; }
-
-        /* Main content */
-        #main-content {
-            flex: 1;
-            overflow-y: auto;
-            background: #f8fafc;
-            padding: 16px;
-        }
-
-        /* Header */
-        #app-header {
-            background: #1a2340;
-            color: #fff;
-            padding: 8px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #0f172a;
-        }
-        .header-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #7dd3fc;
-            letter-spacing: 0.03em;
-        }
-        .header-title span {
-            font-size: 10px;
-            background: #243050;
-            padding: 2px 8px;
-            border-radius: 20px;
-            color: #94a3b8;
-            margin-left: 6px;
-        }
-
-        /* Login */
-        #login-page {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-        }
-        .login-card {
-            background: #1a2340;
-            border: 1px solid #2d3a5a;
-            border-radius: 10px;
-            padding: 28px 24px;
-            width: 100%;
-            max-width: 340px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-        .login-card h1 {
-            color: #7dd3fc;
-            font-size: 16px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 6px;
-        }
-        .login-card .company-sub {
-            color: #64748b;
-            font-size: 9px;
-            text-align: center;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
-        .login-input {
-            width: 100%;
-            padding: 9px 12px;
-            background: #243050;
-            border: 1px solid #2d3a5a;
-            border-radius: 5px;
-            color: #e2e8f0;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
+        #main-content { flex: 1; overflow-y: auto; background: #f8fafc; padding: 16px; }
+        #app-header { background: #1a2340; color: #fff; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; }
+        .header-title { font-size: 12px; font-weight: 700; color: #7dd3fc; }
+        .header-title span { font-size: 10px; background: #243050; padding: 2px 8px; border-radius: 20px; color: #94a3b8; margin-left: 6px; }
+        #login-page { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); }
+        .login-card { background: #1a2340; border: 1px solid #2d3a5a; border-radius: 10px; padding: 28px 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .login-card h1 { color: #7dd3fc; font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+        .login-card .company-sub { color: #64748b; font-size: 9px; text-align: center; margin-bottom: 20px; line-height: 1.4; }
+        .login-input { width: 100%; padding: 9px 12px; background: #243050; border: 1px solid #2d3a5a; border-radius: 5px; color: #e2e8f0; font-size: 13px; margin-bottom: 10px; }
         .login-input:focus { border-color: #3b82f6; outline: none; background: #1e2d4a; }
-        .login-btn {
-            width: 100%;
-            background: #1d4ed8;
-            color: #fff;
-            font-weight: 700;
-            padding: 9px;
-            border-radius: 5px;
-            font-size: 13px;
-            cursor: pointer;
-            border: none;
-            margin-top: 4px;
-            transition: background 0.15s;
-        }
+        .login-btn { width: 100%; background: #1d4ed8; color: #fff; font-weight: 700; padding: 9px; border-radius: 5px; font-size: 13px; cursor: pointer; border: none; margin-top: 4px; transition: background 0.15s; }
         .login-btn:hover { background: #1e40af; }
-
-        /* Home dashboard */
-        .home-card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-        }
-        .home-welcome {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a2340;
-            margin-bottom: 4px;
-        }
-        .home-sub {
-            font-size: 11px;
-            color: #64748b;
-            margin-bottom: 16px;
-        }
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .stat-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 7px;
-            padding: 14px 12px;
-            text-align: center;
-        }
-        .stat-card .stat-val { font-size: 22px; font-weight: 700; color: #1d4ed8; }
-        .stat-card .stat-lbl { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .login-btn:disabled { background: #374151; cursor: not-allowed; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -227,59 +56,44 @@
             Khadun, Tarabo, Rupgonj, Narayanganj
         </div>
         <form onsubmit="handleSecureLogin(event)">
-            <input type="text" id="loginUser" required placeholder="Username" class="login-input">
+            <input type="text" id="loginUser" required placeholder="Username" class="login-input" autocomplete="off">
             <input type="password" id="loginPass" required placeholder="Password" class="login-input">
-            <div id="login-error" class="hidden text-red-400 text-xs font-bold text-center mb-2">❌ Wrong Credentials!</div>
-            <button type="submit" class="login-btn">Sign In</button>
+            <div id="login-error" class="hidden text-red-400 text-xs font-bold text-center mb-2"></div>
+            <button type="submit" id="loginBtn" class="login-btn">Sign In</button>
         </form>
     </div>
 </div>
 
 <!-- App Interface -->
-<div id="app-interface" class="hidden" style="display:none; flex-direction:column; height:100vh;">
-
-    <!-- Top Header -->
+<div id="app-interface" style="display:none; flex-direction:column; height:100vh;">
     <div id="app-header">
         <div class="header-title">
             🏭 Rony Knit Composite (pvt) Ltd
             <span id="user-badge"></span>
         </div>
-        <button onclick="location.reload()" style="background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:4px;border:none;cursor:pointer;">Logout 🚪</button>
+        <button onclick="handleLogout()" style="background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:4px;border:none;cursor:pointer;">Logout 🚪</button>
     </div>
-
-    <!-- Body: Sidebar + Content -->
     <div style="display:flex; flex:1; overflow:hidden;">
-
-        <!-- Sidebar -->
         <div id="sidebar">
             <div class="sidebar-logo">
                 <div class="company-name">Rony Knit<br>Composite<br>(pvt) Ltd</div>
                 <div class="company-addr">Khadun, Tarabo<br>Rupgonj, Narayanganj</div>
             </div>
-
             <button class="nav-btn active" id="nav-challan" onclick="switchSystemTab('challan')">
-                <span class="icon">📝</span>
-                Challan & Bill
+                <span class="icon">📝</span>Challan & Bill
             </button>
-
             <button class="nav-btn" id="nav-statement" onclick="switchSystemTab('statement')">
-                <span class="icon">📋</span>
-                All Statement
+                <span class="icon">📋</span>All Statement
             </button>
-
             <button class="nav-btn" id="nav-control" onclick="switchSystemTab('control')">
-                <span class="icon">⚙️</span>
-                Control Panel
+                <span class="icon">⚙️</span>Control Panel
             </button>
         </div>
-
-        <!-- Main Content Area -->
         <div id="main-content">
 
             <!-- Challan & Bill View -->
             <div id="challan-view" class="space-y-4">
                 <div class="bg-white border-2 border-black p-4 rounded shadow-md">
-                    <!-- Top Search Row -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-2 rounded excel-box mb-4">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-bold text-gray-700 w-28">🔍 Search Challan:</span>
@@ -290,8 +104,6 @@
                             <select id="searchBillSelect" onchange="handleBillSearchDropdown(this)" class="flex-1 p-1 bg-white excel-box text-xs text-gray-900 font-semibold"></select>
                         </div>
                     </div>
-
-                    <!-- Meta Fields -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-xs font-bold text-gray-800">
                         <div class="flex items-center gap-2">
                             <label class="w-24">Chalan no.:</label>
@@ -306,17 +118,11 @@
                             <input type="text" id="invDate" class="flex-1 p-1.5 bg-white excel-box text-gray-900" placeholder="01-Jan-2026">
                         </div>
                     </div>
-
                     <div class="flex items-center gap-2 text-xs font-bold text-gray-800 mb-4">
                         <label class="w-24">Party code:</label>
                         <select id="invPartyInput" onchange="updateRatesForParty()" class="flex-1 p-1.5 bg-white excel-box text-gray-900 font-semibold"></select>
                     </div>
-
-                    <!-- Receive Detail -->
-                    <div class="bg-[#d9534f] text-white text-center font-bold py-1 text-xs tracking-wider border border-black uppercase mb-0">
-                        Receive Detail
-                    </div>
-
+                    <div class="bg-[#d9534f] text-white text-center font-bold py-1 text-xs tracking-wider border border-black uppercase mb-0">Receive Detail</div>
                     <div class="overflow-x-auto excel-box">
                         <table class="w-full text-xs min-w-[1250px] excel-table bg-white">
                             <thead class="bg-gray-200 text-gray-800 font-bold">
@@ -339,15 +145,11 @@
                             <tbody id="challan-rows-body" class="divide-y divide-gray-300"></tbody>
                         </table>
                     </div>
-
-                    <!-- Totals -->
                     <div class="mt-4 flex flex-wrap justify-end gap-6 text-sm font-bold text-gray-900 px-2">
                         <div>Roll total: <span id="lblTotalRoll">0</span></div>
                         <div>Weight total: <span id="lblTotalWeight">0.00</span></div>
                         <div>Amount total: <span id="lblTotalAmount">0.00</span></div>
                     </div>
-
-                    <!-- Action Buttons -->
                     <div class="mt-6 flex flex-wrap gap-3 justify-center border-t border-gray-300 pt-4">
                         <button onclick="saveChallanAndBillData()" class="px-6 py-2 bg-white excel-box font-bold text-xs shadow hover:bg-gray-50 text-gray-800">Save</button>
                         <button onclick="openReportModal('challan')" class="px-6 py-2 bg-white excel-box font-bold text-xs shadow hover:bg-gray-50 text-gray-800">Show Challan</button>
@@ -412,9 +214,9 @@
                 </div>
             </div>
 
-        </div><!-- end main-content -->
-    </div><!-- end body flex -->
-</div><!-- end app-interface -->
+        </div>
+    </div>
+</div>
 
 <!-- Report Modal -->
 <div id="report-modal" class="fixed inset-0 bg-black/60 z-[200] hidden flex items-center justify-center p-4">
@@ -423,7 +225,7 @@
             <h3 id="report-modal-title" class="text-sm font-bold text-gray-800">Document Viewer</h3>
             <div class="flex gap-2">
                 <button onclick="triggerPrintEngine()" class="bg-blue-600 text-white text-xs px-3 py-1 font-bold rounded hover:bg-blue-700">🖨️ Print</button>
-                <button onclick="triggerExcelExport()" class="bg-emerald-600 text-white text-xs px-3 py-1 font-bold rounded hover:bg-emerald-700">📊 Download Excel</button>
+                <button onclick="triggerExcelExport()" class="bg-emerald-600 text-white text-xs px-3 py-1 font-bold rounded hover:bg-emerald-700">📊 Excel</button>
                 <button onclick="closeReportModal()" class="bg-red-500 text-white text-xs px-3 py-1 font-bold rounded hover:bg-red-600">Close</button>
             </div>
         </header>
@@ -431,7 +233,6 @@
     </div>
 </div>
 
-<!-- Print Section -->
 <div id="print-section" class="hidden p-6 max-w-4xl mx-auto bg-white text-black font-mono"></div>
 
 <script>
@@ -445,9 +246,16 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    let globalSettings = [], globalParties = [], globalRates = [], globalInvoices = [], currentUserRole = "", rowCounter = 0;
-    let currentModalPayload = null;
+    // Username → Firebase email mapping (password stays in Firebase, not here)
+    const USER_MAP = {
+        'admin': 'admin@rkcl.com',
+        'dye':   'dye@rkcl.com'
+    };
+
+    let globalSettings = [], globalParties = [], globalRates = [], globalInvoices = [];
+    let currentUserRole = "", rowCounter = 0, currentModalPayload = null;
 
     function generateSystemFormattedDate(inputDate = new Date()) {
         const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -458,42 +266,68 @@
 
     async function handleSecureLogin(e) {
         e.preventDefault();
-        let u = document.getElementById('loginUser').value.trim().toLowerCase();
-        let p = document.getElementById('loginPass').value;
-        if((u === 'admin' && p === 'html') || (u === 'dye' && p === 'dye')) {
-            currentUserRole = u;
-            document.getElementById('login-page').classList.add('hidden');
-            let appEl = document.getElementById('app-interface');
-            appEl.style.display = 'flex';
-            appEl.classList.remove('hidden');
-            document.getElementById('user-badge').innerText = `(${u})`;
-            startLiveSystemSync();
-            switchSystemTab('challan');
-        } else {
-            document.getElementById('login-error').classList.remove('hidden');
+        let username = document.getElementById('loginUser').value.trim().toLowerCase();
+        let password = document.getElementById('loginPass').value;
+        let errEl = document.getElementById('login-error');
+        let btn = document.getElementById('loginBtn');
+
+        errEl.classList.add('hidden');
+        errEl.innerText = '';
+
+        // Check if username exists in our map
+        if (!USER_MAP[username]) {
+            errEl.innerText = '❌ Wrong Username or Password!';
+            errEl.classList.remove('hidden');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = 'Signing in...';
+
+        try {
+            let email = USER_MAP[username];
+            await auth.signInWithEmailAndPassword(email, password);
+            // Auth state observer handles the rest
+        } catch(err) {
+            errEl.innerText = '❌ Wrong Username or Password!';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.innerText = 'Sign In';
         }
     }
 
-    function switchSystemTab(tab) {
-        // Hide all views
-        ['challan-view','statement-view','control-view'].forEach(v => document.getElementById(v).classList.add('hidden'));
-        // Remove active from all nav buttons
-        ['nav-challan','nav-statement','nav-control'].forEach(b => document.getElementById(b).classList.remove('active'));
+    async function handleLogout() {
+        await auth.signOut();
+    }
 
-        if(tab === 'challan') {
-            document.getElementById('challan-view').classList.remove('hidden');
-            document.getElementById('nav-challan').classList.add('active');
-            resetChallanForm();
+    // Firebase Auth state observer
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Find role from email
+            let role = Object.keys(USER_MAP).find(k => USER_MAP[k] === user.email) || 'dye';
+            currentUserRole = role;
+            document.getElementById('login-page').classList.add('hidden');
+            let appEl = document.getElementById('app-interface');
+            appEl.style.display = 'flex';
+            document.getElementById('user-badge').innerText = `(${role})`;
+            document.getElementById('loginBtn').disabled = false;
+            document.getElementById('loginBtn').innerText = 'Sign In';
+            startLiveSystemSync();
+            switchSystemTab('challan');
+        } else {
+            // Logged out
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('app-interface').style.display = 'none';
+            currentUserRole = '';
         }
-        if(tab === 'statement') {
-            document.getElementById('statement-view').classList.remove('hidden');
-            document.getElementById('nav-statement').classList.add('active');
-        }
-        if(tab === 'control') {
-            document.getElementById('control-view').classList.remove('hidden');
-            document.getElementById('nav-control').classList.add('active');
-            renderControlPanelUI();
-        }
+    });
+
+    function switchSystemTab(tab) {
+        ['challan-view','statement-view','control-view'].forEach(v => document.getElementById(v).classList.add('hidden'));
+        ['nav-challan','nav-statement','nav-control'].forEach(b => document.getElementById(b).classList.remove('active'));
+        if(tab === 'challan') { document.getElementById('challan-view').classList.remove('hidden'); document.getElementById('nav-challan').classList.add('active'); resetChallanForm(); }
+        if(tab === 'statement') { document.getElementById('statement-view').classList.remove('hidden'); document.getElementById('nav-statement').classList.add('active'); }
+        if(tab === 'control') { document.getElementById('control-view').classList.remove('hidden'); document.getElementById('nav-control').classList.add('active'); renderControlPanelUI(); }
     }
 
     function startLiveSystemSync() {
@@ -505,11 +339,9 @@
 
     function buildMainDatalists() {
         let partySel = document.getElementById('invPartyInput');
-        partySel.innerHTML = '<option value="">-- Select Party Code --</option>' + globalParties.map(p => `<option value="${p.customer_name}-${p.customer_code}">${p.customer_name} (${p.customer_code})</option>`).join('');
-        let cSel = document.getElementById('searchChallanSelect');
-        cSel.innerHTML = '<option value="">-- Select Old Challan --</option>' + globalInvoices.map(i => `<option value="${i.challan_no}">${i.challan_no} (${i.date})</option>`).join('');
-        let bSel = document.getElementById('searchBillSelect');
-        bSel.innerHTML = '<option value="">-- Select Old Bill --</option>' + globalInvoices.map(i => `<option value="${i.bill_no}">${i.bill_no} (${i.date})</option>`).join('');
+        partySel.innerHTML = '<option value="">-- Select Party --</option>' + globalParties.map(p => `<option value="${p.customer_name}-${p.customer_code}">${p.customer_name} (${p.customer_code})</option>`).join('');
+        document.getElementById('searchChallanSelect').innerHTML = '<option value="">-- Select Old Challan --</option>' + globalInvoices.map(i => `<option value="${i.challan_no}">${i.challan_no} (${i.date})</option>`).join('');
+        document.getElementById('searchBillSelect').innerHTML = '<option value="">-- Select Old Bill --</option>' + globalInvoices.map(i => `<option value="${i.bill_no}">${i.bill_no} (${i.date})</option>`).join('');
     }
 
     function calculateNextNos() {
@@ -528,8 +360,7 @@
     }
 
     function toggleProcessDropdownPopup(id) {
-        let p = document.getElementById(`proc-pop-${id}`);
-        p.classList.toggle('hidden');
+        document.getElementById(`proc-pop-${id}`).classList.toggle('hidden');
     }
 
     function addNewRowToMatrix(copied = null) {
@@ -542,7 +373,6 @@
                 <input type="checkbox" class="row-proc-chk-${rId} w-4 h-4" value="${s.name}" onchange="handleProcessCheckStateChange(${rId})">
                 <span>${s.name}</span>
             </label>`).join('');
-
         tr.innerHTML = `
             <td class="p-1 text-center font-bold text-gray-600 bg-gray-50">${rId}</td>
             <td class="p-0.5"><input type="text" id="r-fab-${rId}" list="fDL-${rId}" class="w-full bg-white p-1 text-gray-900" onkeydown="hRE(event,${rId},'col')"><datalist id="fDL-${rId}">${fabOpts}</datalist></td>
@@ -564,41 +394,17 @@
             <td class="p-0.5"><input type="text" id="r-batch-${rId}" class="w-full bg-white p-1 text-gray-900" onkeydown="hRE(event,${rId},'order')"></td>
             <td class="p-0.5"><input type="text" id="r-order-${rId}" class="w-full bg-white p-1 text-gray-900" onkeydown="hRE(event,${rId},'buyer')"></td>
             <td class="p-0.5"><input type="text" id="r-buyer-${rId}" class="w-full bg-white p-1 text-gray-900" onkeydown="hRFE(event,${rId})"></td>`;
-
         document.getElementById('challan-rows-body').appendChild(tr);
         if(copied) { ['fab','col','gsm','dia','roll','grey','finish','batch','order','buyer'].forEach(f => { if(document.getElementById(`r-${f}-${rId}`)) document.getElementById(`r-${f}-${rId}`).value = copied[f]; }); }
         setTimeout(() => document.getElementById(`r-fab-${rId}`).focus(), 50);
     }
 
-    function hRE(e, id, f) {
-        if(e.key === 'Enter') {
-            e.preventDefault();
-            if(f === 'process_dummy') toggleProcessDropdownPopup(id);
-            else document.getElementById(`r-${f}-${id}`).focus();
-        }
-    }
-
-    function hRFE(e, id) {
-        if(e.key === 'Enter') {
-            e.preventDefault();
-            addNewRowToMatrix({
-                fab: document.getElementById(`r-fab-${id}`).value,
-                col: document.getElementById(`r-col-${id}`).value,
-                gsm: document.getElementById(`r-gsm-${id}`).value,
-                dia: document.getElementById(`r-dia-${id}`).value,
-                roll: document.getElementById(`r-roll-${id}`).value,
-                grey: document.getElementById(`r-grey-${id}`).value,
-                finish: document.getElementById(`r-finish-${id}`).value,
-                batch: document.getElementById(`r-batch-${id}`).value,
-                order: document.getElementById(`r-order-${id}`).value,
-                buyer: document.getElementById(`r-buyer-${id}`).value
-            });
-        }
-    }
+    function hRE(e, id, f) { if(e.key==='Enter'){e.preventDefault(); if(f==='process_dummy') toggleProcessDropdownPopup(id); else document.getElementById(`r-${f}-${id}`).focus();} }
+    function hRFE(e, id) { if(e.key==='Enter'){e.preventDefault(); addNewRowToMatrix({fab:document.getElementById(`r-fab-${id}`).value,col:document.getElementById(`r-col-${id}`).value,gsm:document.getElementById(`r-gsm-${id}`).value,dia:document.getElementById(`r-dia-${id}`).value,roll:document.getElementById(`r-roll-${id}`).value,grey:document.getElementById(`r-grey-${id}`).value,finish:document.getElementById(`r-finish-${id}`).value,batch:document.getElementById(`r-batch-${id}`).value,order:document.getElementById(`r-order-${id}`).value,buyer:document.getElementById(`r-buyer-${id}`).value});} }
 
     function handleProcessCheckStateChange(id) {
-        let checkedItems = Array.from(document.querySelectorAll(`.row-proc-chk-${id}:checked`)).map(c => c.value);
-        document.getElementById(`r-proc-dummy-${id}`).value = checkedItems.join(', ');
+        let checked = Array.from(document.querySelectorAll(`.row-proc-chk-${id}:checked`)).map(c => c.value);
+        document.getElementById(`r-proc-dummy-${id}`).value = checked.join(', ');
         calculateMatrixRowRate(id);
     }
 
@@ -622,205 +428,139 @@
     }
 
     function calculateTotalSummaries() {
-        let totalRoll = 0, totalWeight = 0, totalAmount = 0;
-        for(let i = 1; i <= rowCounter; i++) {
-            if(document.getElementById(`r-fab-${i}`)) {
-                totalRoll += parseInt(document.getElementById(`r-roll-${i}`).value) || 0;
-                totalWeight += parseFloat(document.getElementById(`r-grey-${i}`).value) || 0;
-                totalAmount += parseFloat(document.getElementById(`r-total-${i}`).value) || 0;
+        let totalRoll=0,totalWeight=0,totalAmount=0;
+        for(let i=1;i<=rowCounter;i++){
+            if(document.getElementById(`r-fab-${i}`)){
+                totalRoll+=parseInt(document.getElementById(`r-roll-${i}`).value)||0;
+                totalWeight+=parseFloat(document.getElementById(`r-grey-${i}`).value)||0;
+                totalAmount+=parseFloat(document.getElementById(`r-total-${i}`).value)||0;
             }
         }
-        document.getElementById('lblTotalRoll').innerText = totalRoll;
-        document.getElementById('lblTotalWeight').innerText = totalWeight.toFixed(2);
-        document.getElementById('lblTotalAmount').innerText = totalAmount.toFixed(2);
+        document.getElementById('lblTotalRoll').innerText=totalRoll;
+        document.getElementById('lblTotalWeight').innerText=totalWeight.toFixed(2);
+        document.getElementById('lblTotalAmount').innerText=totalAmount.toFixed(2);
     }
 
-    function updateRatesForParty() { for(let i=1; i<=rowCounter; i++) { if(document.getElementById(`r-fab-${i}`)) calculateMatrixRowRate(i); } }
-
-    function handleChallanSearchDropdown(elem) { if(elem.value) { let m = globalInvoices.find(i=>i.challan_no === elem.value); if(m) pFWI(m); } }
-    function handleBillSearchDropdown(elem) { if(elem.value) { let m = globalInvoices.find(i=>i.bill_no === elem.value); if(m) pFWI(m); } }
+    function updateRatesForParty() { for(let i=1;i<=rowCounter;i++){if(document.getElementById(`r-fab-${i}`))calculateMatrixRowRate(i);} }
+    function handleChallanSearchDropdown(elem) { if(elem.value){let m=globalInvoices.find(i=>i.challan_no===elem.value);if(m)pFWI(m);} }
+    function handleBillSearchDropdown(elem) { if(elem.value){let m=globalInvoices.find(i=>i.bill_no===elem.value);if(m)pFWI(m);} }
 
     function pFWI(inv) {
-        document.getElementById('invChallanNo').value = inv.challan_no;
-        document.getElementById('invBillNo').value = inv.bill_no;
-        document.getElementById('invPartyInput').value = inv.party_name_code;
-        document.getElementById('invDate').value = inv.date;
-        document.getElementById('challan-rows-body').innerHTML = '';
-        rowCounter = 0;
-        inv.rows.forEach(r => {
+        document.getElementById('invChallanNo').value=inv.challan_no;
+        document.getElementById('invBillNo').value=inv.bill_no;
+        document.getElementById('invPartyInput').value=inv.party_name_code;
+        document.getElementById('invDate').value=inv.date;
+        document.getElementById('challan-rows-body').innerHTML='';
+        rowCounter=0;
+        inv.rows.forEach(r=>{
             addNewRowToMatrix();
-            let curId = rowCounter;
-            document.getElementById(`r-fab-${curId}`).value = r.fabrication;
-            document.getElementById(`r-col-${curId}`).value = r.color;
-            document.getElementById(`r-gsm-${curId}`).value = r.gsm;
-            document.getElementById(`r-dia-${curId}`).value = r.dia;
-            document.getElementById(`r-roll-${curId}`).value = r.roll;
-            document.getElementById(`r-grey-${curId}`).value = r.grey_wt;
-            document.getElementById(`r-finish-${curId}`).value = r.finish_wt;
-            document.getElementById(`r-rate-${curId}`).value = r.rate;
-            document.getElementById(`r-total-${curId}`).value = r.total;
-            document.getElementById(`r-batch-${curId}`).value = r.batch || '';
-            document.getElementById(`r-order-${curId}`).value = r.order || '';
-            document.getElementById(`r-buyer-${curId}`).value = r.buyer || '';
-            let chks = document.querySelectorAll(`.row-proc-chk-${curId}`);
-            let matchedProcs = r.processes || [];
-            chks.forEach(chk => { if(matchedProcs.includes(chk.value)) chk.checked = true; });
-            document.getElementById(`r-proc-dummy-${curId}`).value = matchedProcs.join(', ');
+            let curId=rowCounter;
+            document.getElementById(`r-fab-${curId}`).value=r.fabrication;
+            document.getElementById(`r-col-${curId}`).value=r.color;
+            document.getElementById(`r-gsm-${curId}`).value=r.gsm;
+            document.getElementById(`r-dia-${curId}`).value=r.dia;
+            document.getElementById(`r-roll-${curId}`).value=r.roll;
+            document.getElementById(`r-grey-${curId}`).value=r.grey_wt;
+            document.getElementById(`r-finish-${curId}`).value=r.finish_wt;
+            document.getElementById(`r-rate-${curId}`).value=r.rate;
+            document.getElementById(`r-total-${curId}`).value=r.total;
+            document.getElementById(`r-batch-${curId}`).value=r.batch||'';
+            document.getElementById(`r-order-${curId}`).value=r.order||'';
+            document.getElementById(`r-buyer-${curId}`).value=r.buyer||'';
+            let chks=document.querySelectorAll(`.row-proc-chk-${curId}`);
+            let matchedProcs=r.processes||[];
+            chks.forEach(chk=>{if(matchedProcs.includes(chk.value))chk.checked=true;});
+            document.getElementById(`r-proc-dummy-${curId}`).value=matchedProcs.join(', ');
         });
         calculateTotalSummaries();
     }
 
     async function saveChallanAndBillData() {
-        let cNo = document.getElementById('invChallanNo').value;
-        let bNo = document.getElementById('invBillNo').value;
-        let pName = document.getElementById('invPartyInput').value;
-        let d = document.getElementById('invDate').value;
-        if(!pName || !d) { alert("Error: Missing Date or Party Selection!"); return; }
-        let rData = [], tW = 0, tA = 0;
-        for(let i=1; i<=rowCounter; i++) {
-            if(!document.getElementById(`r-fab-${i}`)) continue;
-            let fab = document.getElementById(`r-fab-${i}`).value; if(!fab) continue;
-            let rObj = {
-                fabrication: fab, color: document.getElementById(`r-col-${i}`).value,
-                gsm: document.getElementById(`r-gsm-${i}`).value, dia: document.getElementById(`r-dia-${i}`).value,
-                roll: parseInt(document.getElementById(`r-roll-${i}`).value) || 0,
-                grey_wt: parseFloat(document.getElementById(`r-grey-${i}`).value) || 0,
-                finish_wt: parseFloat(document.getElementById(`r-finish-${i}`).value) || 0,
-                processes: Array.from(document.querySelectorAll(`.row-proc-chk-${i}:checked`)).map(c => c.value),
-                rate: parseFloat(document.getElementById(`r-rate-${i}`).value) || 0,
-                total: parseFloat(document.getElementById(`r-total-${i}`).value) || 0,
-                batch: document.getElementById(`r-batch-${i}`).value,
-                order: document.getElementById(`r-order-${i}`).value,
-                buyer: document.getElementById(`r-buyer-${i}`).value
-            };
-            rData.push(rObj); tW += rObj.grey_wt; tA += rObj.total;
+        let cNo=document.getElementById('invChallanNo').value;
+        let bNo=document.getElementById('invBillNo').value;
+        let pName=document.getElementById('invPartyInput').value;
+        let d=document.getElementById('invDate').value;
+        if(!pName||!d){alert("Error: Missing Date or Party!");return;}
+        let rData=[],tW=0,tA=0;
+        for(let i=1;i<=rowCounter;i++){
+            if(!document.getElementById(`r-fab-${i}`))continue;
+            let fab=document.getElementById(`r-fab-${i}`).value;if(!fab)continue;
+            let rObj={fabrication:fab,color:document.getElementById(`r-col-${i}`).value,gsm:document.getElementById(`r-gsm-${i}`).value,dia:document.getElementById(`r-dia-${i}`).value,roll:parseInt(document.getElementById(`r-roll-${i}`).value)||0,grey_wt:parseFloat(document.getElementById(`r-grey-${i}`).value)||0,finish_wt:parseFloat(document.getElementById(`r-finish-${i}`).value)||0,processes:Array.from(document.querySelectorAll(`.row-proc-chk-${i}:checked`)).map(c=>c.value),rate:parseFloat(document.getElementById(`r-rate-${i}`).value)||0,total:parseFloat(document.getElementById(`r-total-${i}`).value)||0,batch:document.getElementById(`r-batch-${i}`).value,order:document.getElementById(`r-order-${i}`).value,buyer:document.getElementById(`r-buyer-${i}`).value};
+            rData.push(rObj);tW+=rObj.grey_wt;tA+=rObj.total;
         }
-        if(!rData.length) { alert("Empty Rows - Cannot Save!"); return; }
-        currentModalPayload = { challan_no: cNo, bill_no: bNo, party_name_code: pName, date: d, rows: rData, total_weight: tW, total_amount: tA };
+        if(!rData.length){alert("Empty rows! Cannot save.");return;}
+        currentModalPayload={challan_no:cNo,bill_no:bNo,party_name_code:pName,date:d,rows:rData,total_weight:tW,total_amount:tA};
         await db.collection("invoices").add(currentModalPayload);
-        alert("Saved Successfully into Cloud!");
+        alert("Saved Successfully!");
         resetChallanForm();
     }
 
     function openReportModal(mode) {
-        let cNo = document.getElementById('invChallanNo').value;
-        let bNo = document.getElementById('invBillNo').value;
-        let pName = document.getElementById('invPartyInput').value;
-        let d = document.getElementById('invDate').value;
-        let rData = [];
-        for(let i=1; i<=rowCounter; i++) {
-            if(!document.getElementById(`r-fab-${i}`)) continue;
-            let fab = document.getElementById(`r-fab-${i}`).value; if(!fab) continue;
-            rData.push({
-                fabrication: fab, color: document.getElementById(`r-col-${i}`).value,
-                gsm: document.getElementById(`r-gsm-${i}`).value, dia: document.getElementById(`r-dia-${i}`).value,
-                roll: parseInt(document.getElementById(`r-roll-${i}`).value) || 0,
-                grey_wt: parseFloat(document.getElementById(`r-grey-${i}`).value) || 0,
-                finish_wt: parseFloat(document.getElementById(`r-finish-${i}`).value) || 0,
-                processes: Array.from(document.querySelectorAll(`.row-proc-chk-${i}:checked`)).map(c => c.value),
-                rate: parseFloat(document.getElementById(`r-rate-${i}`).value) || 0,
-                total: parseFloat(document.getElementById(`r-total-${i}`).value) || 0,
-                batch: document.getElementById(`r-batch-${i}`).value,
-                order: document.getElementById(`r-order-${i}`).value,
-                buyer: document.getElementById(`r-buyer-${i}`).value
-            });
+        let cNo=document.getElementById('invChallanNo').value;
+        let bNo=document.getElementById('invBillNo').value;
+        let pName=document.getElementById('invPartyInput').value;
+        let d=document.getElementById('invDate').value;
+        let rData=[];
+        for(let i=1;i<=rowCounter;i++){
+            if(!document.getElementById(`r-fab-${i}`))continue;
+            let fab=document.getElementById(`r-fab-${i}`).value;if(!fab)continue;
+            rData.push({fabrication:fab,color:document.getElementById(`r-col-${i}`).value,gsm:document.getElementById(`r-gsm-${i}`).value,dia:document.getElementById(`r-dia-${i}`).value,roll:parseInt(document.getElementById(`r-roll-${i}`).value)||0,grey_wt:parseFloat(document.getElementById(`r-grey-${i}`).value)||0,finish_wt:parseFloat(document.getElementById(`r-finish-${i}`).value)||0,processes:Array.from(document.querySelectorAll(`.row-proc-chk-${i}:checked`)).map(c=>c.value),rate:parseFloat(document.getElementById(`r-rate-${i}`).value)||0,total:parseFloat(document.getElementById(`r-total-${i}`).value)||0,batch:document.getElementById(`r-batch-${i}`).value,order:document.getElementById(`r-order-${i}`).value,buyer:document.getElementById(`r-buyer-${i}`).value});
         }
-        if(!pName || !rData.length) { alert("No valid data! Select Party and fill rows first."); return; }
-        let tW = rData.reduce((a,c) => a + c.grey_wt, 0);
-        let tA = rData.reduce((a,c) => a + c.total, 0);
-        currentModalPayload = { challan_no: cNo, bill_no: bNo, party_name_code: pName, date: d, rows: rData, total_weight: tW, total_amount: tA };
-        document.getElementById('report-modal-title').innerText = mode === 'challan' ? `📄 Challan [${cNo}]` : `💵 Bill Invoice [${bNo}]`;
-
-        let rowsHtml = rData.map((r, idx) => `
-            <tr style="border:1px solid #000;">
-                <td style="padding:4px;text-align:center;">${idx+1}</td>
-                <td style="padding:4px;">${r.fabrication}</td>
-                <td style="padding:4px;">${r.color}</td>
-                <td style="padding:4px;text-align:center;">${r.gsm}</td>
-                <td style="padding:4px;text-align:center;">${r.dia}</td>
-                <td style="padding:4px;text-align:center;">${r.roll}</td>
-                <td style="padding:4px;text-align:right;">${r.grey_wt}</td>
-                <td style="padding:4px;text-align:right;">${r.finish_wt}</td>
-                <td style="padding:4px;">${r.processes.join(', ')}</td>
-                ${mode === 'bill' ? `<td style="padding:4px;text-align:right;">${r.rate}</td><td style="padding:4px;text-align:right;font-weight:bold;">${r.total}</td>` : ''}
-            </tr>`).join('');
-
-        let tableHeader = `<tr style="background:#f3f4f6;border:1px solid #000;">
-            <th style="padding:4px;">SL</th><th style="padding:4px;">Fabrication</th><th style="padding:4px;">Color</th>
-            <th style="padding:4px;">GSM</th><th style="padding:4px;">Dia</th><th style="padding:4px;">Roll</th>
-            <th style="padding:4px;">Grey Wt</th><th style="padding:4px;">Fin Wt</th><th style="padding:4px;">Processes</th>
-            ${mode === 'bill' ? `<th style="padding:4px;">Rate</th><th style="padding:4px;">Total</th>` : ''}
-        </tr>`;
-
-        document.getElementById('report-modal-body').innerHTML = `
+        if(!pName||!rData.length){alert("Select Party and fill rows first.");return;}
+        let tW=rData.reduce((a,c)=>a+c.grey_wt,0);
+        let tA=rData.reduce((a,c)=>a+c.total,0);
+        currentModalPayload={challan_no:cNo,bill_no:bNo,party_name_code:pName,date:d,rows:rData,total_weight:tW,total_amount:tA};
+        document.getElementById('report-modal-title').innerText=mode==='challan'?`📄 Challan [${cNo}]`:`💵 Bill Invoice [${bNo}]`;
+        let rowsHtml=rData.map((r,idx)=>`<tr style="border:1px solid #000;"><td style="padding:4px;text-align:center;">${idx+1}</td><td style="padding:4px;">${r.fabrication}</td><td style="padding:4px;">${r.color}</td><td style="padding:4px;text-align:center;">${r.gsm}</td><td style="padding:4px;text-align:center;">${r.dia}</td><td style="padding:4px;text-align:center;">${r.roll}</td><td style="padding:4px;text-align:right;">${r.grey_wt}</td><td style="padding:4px;text-align:right;">${r.finish_wt}</td><td style="padding:4px;">${r.processes.join(', ')}</td>${mode==='bill'?`<td style="padding:4px;text-align:right;">${r.rate}</td><td style="padding:4px;text-align:right;font-weight:bold;">${r.total}</td>`:''}</tr>`).join('');
+        let tableHeader=`<tr style="background:#f3f4f6;border:1px solid #000;"><th style="padding:4px;">SL</th><th style="padding:4px;">Fabrication</th><th style="padding:4px;">Color</th><th style="padding:4px;">GSM</th><th style="padding:4px;">Dia</th><th style="padding:4px;">Roll</th><th style="padding:4px;">Grey Wt</th><th style="padding:4px;">Fin Wt</th><th style="padding:4px;">Processes</th>${mode==='bill'?'<th style="padding:4px;">Rate</th><th style="padding:4px;">Total</th>':''}</tr>`;
+        document.getElementById('report-modal-body').innerHTML=`
             <div style="text-align:center;margin-bottom:20px;">
                 <h2 style="font-size:18px;font-weight:bold;margin:0;">Rony Knit Composite (pvt) Ltd</h2>
                 <p style="font-size:11px;margin:2px 0;color:#555;">Khadun, Tarabo, Rupgonj, Narayanganj</p>
-                <h4 style="text-transform:uppercase;background:#000;color:#fff;display:inline-block;padding:2px 12px;font-size:13px;margin-top:5px;">
-                    ${mode === 'challan' ? 'Delivery Challan' : 'Commercial Bill Invoice'}
-                </h4>
+                <h4 style="text-transform:uppercase;background:#000;color:#fff;display:inline-block;padding:2px 12px;font-size:13px;margin-top:5px;">${mode==='challan'?'Delivery Challan':'Commercial Bill Invoice'}</h4>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:15px;border-bottom:1px dashed #000;padding-bottom:10px;">
-                <div>
-                    <p style="margin:2px 0;"><b>Challan Ref:</b> ${cNo}</p>
-                    <p style="margin:2px 0;"><b>Bill Invoice:</b> ${bNo}</p>
-                </div>
-                <div style="text-align:right;">
-                    <p style="margin:2px 0;"><b>Date:</b> ${d}</p>
-                    <p style="margin:2px 0;"><b>Party:</b> ${pName}</p>
-                </div>
+                <div><p style="margin:2px 0;"><b>Challan:</b> ${cNo}</p><p style="margin:2px 0;"><b>Bill:</b> ${bNo}</p></div>
+                <div style="text-align:right;"><p style="margin:2px 0;"><b>Date:</b> ${d}</p><p style="margin:2px 0;"><b>Party:</b> ${pName}</p></div>
             </div>
-            <table style="width:100%;border-collapse:collapse;font-size:11px;" border="1">
-                <thead>${tableHeader}</thead>
-                <tbody>${rowsHtml}</tbody>
-            </table>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;" border="1"><thead>${tableHeader}</thead><tbody>${rowsHtml}</tbody></table>
             <div style="margin-top:15px;text-align:right;font-size:12px;font-weight:bold;border-top:1px solid #000;padding-top:5px;">
                 <p style="margin:2px 0;">Total Weight: ${tW.toFixed(2)} KG</p>
-                ${mode === 'bill' ? `<p style="margin:2px 0;font-size:14px;color:#047857;">Net Total: ${tA.toFixed(2)} TK</p>` : ''}
+                ${mode==='bill'?`<p style="margin:2px 0;font-size:14px;color:#047857;">Net Total: ${tA.toFixed(2)} TK</p>`:''}
             </div>
             <div style="margin-top:50px;display:flex;justify-content:space-between;font-size:10px;">
-                <span style="border-top:1px solid #000;width:100px;text-align:center;">Receiver Sign</span>
+                <span style="border-top:1px solid #000;width:100px;text-align:center;">Receiver</span>
                 <span style="border-top:1px solid #000;width:100px;text-align:center;">Verified</span>
                 <span style="border-top:1px solid #000;width:100px;text-align:center;">Authorized</span>
             </div>`;
-
         document.getElementById('report-modal').classList.remove('hidden');
     }
 
-    function closeReportModal() { document.getElementById('report-modal').classList.add('hidden'); }
+    function closeReportModal(){document.getElementById('report-modal').classList.add('hidden');}
 
-    function triggerPrintEngine() {
-        let cnt = document.getElementById('report-modal-body').innerHTML;
-        let pS = document.getElementById('print-section');
-        pS.innerHTML = cnt;
-        pS.classList.remove('hidden');
-        window.print();
-        pS.classList.add('hidden');
+    function triggerPrintEngine(){
+        let cnt=document.getElementById('report-modal-body').innerHTML;
+        let pS=document.getElementById('print-section');
+        pS.innerHTML=cnt;pS.classList.remove('hidden');
+        window.print();pS.classList.add('hidden');
     }
 
-    function triggerExcelExport() {
-        if(!currentModalPayload) return;
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += `Rony Knit Composite (pvt) Ltd\r\n`;
-        csvContent += `Khadun, Tarabo, Rupgonj, Narayanganj\r\n\r\n`;
-        csvContent += `Challan No,${currentModalPayload.challan_no},Bill No,${currentModalPayload.bill_no},Date,${currentModalPayload.date}\r\n`;
-        csvContent += `Party,${currentModalPayload.party_name_code}\r\n\r\n`;
-        csvContent += `SL,Fabrication,Color,GSM,Dia,Roll,Grey Weight,Finish Weight,Processes,Rate,Total\r\n`;
-        currentModalPayload.rows.forEach((r, idx) => {
-            csvContent += `${idx+1},"${r.fabrication}","${r.color}",${r.gsm},${r.dia},${r.roll},${r.grey_wt},${r.finish_wt},"${r.processes.join('-')}",${r.rate},${r.total}\r\n`;
-        });
-        csvContent += `\r\nTotal Weight,${currentModalPayload.total_weight},,Total Amount,${currentModalPayload.total_amount}\r\n`;
-        let encodedUri = encodeURI(csvContent);
-        let link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `RKCL_${currentModalPayload.challan_no}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    function triggerExcelExport(){
+        if(!currentModalPayload)return;
+        let csv="data:text/csv;charset=utf-8,Rony Knit Composite (pvt) Ltd\r\nKhadun, Tarabo, Rupgonj, Narayanganj\r\n\r\n";
+        csv+=`Challan No,${currentModalPayload.challan_no},Bill No,${currentModalPayload.bill_no},Date,${currentModalPayload.date}\r\n`;
+        csv+=`Party,${currentModalPayload.party_name_code}\r\n\r\n`;
+        csv+="SL,Fabrication,Color,GSM,Dia,Roll,Grey Weight,Finish Weight,Processes,Rate,Total\r\n";
+        currentModalPayload.rows.forEach((r,idx)=>{csv+=`${idx+1},"${r.fabrication}","${r.color}",${r.gsm},${r.dia},${r.roll},${r.grey_wt},${r.finish_wt},"${r.processes.join('-')}",${r.rate},${r.total}\r\n`;});
+        csv+=`\r\nTotal Weight,${currentModalPayload.total_weight},,Total Amount,${currentModalPayload.total_amount}\r\n`;
+        let link=document.createElement("a");
+        link.setAttribute("href",encodeURI(csv));
+        link.setAttribute("download",`RKCL_${currentModalPayload.challan_no}.csv`);
+        document.body.appendChild(link);link.click();document.body.removeChild(link);
     }
 
-    function renderStatementTable() {
-        document.getElementById('statement-table-body').innerHTML = globalInvoices.map(i => `
+    function renderStatementTable(){
+        document.getElementById('statement-table-body').innerHTML=globalInvoices.map(i=>`
             <tr class="excel-box">
                 <td class="p-2">${i.date}</td>
                 <td class="p-2 font-bold text-blue-600">${i.challan_no}</td>
@@ -828,45 +568,51 @@
                 <td class="p-2">${i.party_name_code}</td>
                 <td class="p-2 text-right">${i.total_weight} KG</td>
                 <td class="p-2 text-right text-emerald-700 font-bold">${i.total_amount} TK</td>
-                <td class="p-2 text-center">
+                <td class="p-2 text-center flex gap-1 justify-center">
                     <button onclick="pFWI(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(i))}'))); switchSystemTab('challan');" class="bg-blue-600 px-2 py-0.5 text-white text-[11px] font-bold rounded">Load</button>
+                    ${currentUserRole==='admin'?`<button onclick="deleteInvoice('${i.id}')" class="bg-red-500 px-2 py-0.5 text-white text-[11px] font-bold rounded">Delete</button>`:''}
                 </td>
             </tr>`).join('');
     }
 
-    async function saveSettingItem(e, type, fId) {
-        e.preventDefault();
-        await db.collection("general_settings").add({ type, name: document.getElementById(fId).value.trim() });
-        document.getElementById(fId).value = '';
-    }
-
-    function renderControlPanelUI() {
-        document.getElementById('fab-setting-list').innerHTML = globalSettings.filter(s => s.type === 'fabrication').map(d => `<li class="py-1 flex justify-between"><span>${d.name}</span><button onclick="db.collection('general_settings').doc('${d.id}').delete()" class="text-red-500 font-bold">X</button></li>`).join('');
-        document.getElementById('proc-setting-list').innerHTML = globalSettings.filter(s => s.type === 'process').map(d => `<li class="py-1 flex justify-between"><span>${d.name}</span><button onclick="db.collection('general_settings').doc('${d.id}').delete()" class="text-red-500 font-bold">X</button></li>`).join('');
-        document.getElementById('party-rate-inputs').innerHTML = globalSettings.filter(s => s.type === 'process').map(p => `<div class="flex justify-between items-center bg-gray-50 p-1 rounded border"><span>${p.name}</span><input type="number" placeholder="Rate" class="w-16 p-0.5 bg-white excel-box text-center rate-field text-gray-900" data-proc="${p.name}"></div>`).join('');
-    }
-
-    async function savePartyAndCustomRates(e) {
-        e.preventDefault();
-        let n = document.getElementById('pName').value.trim();
-        let a = document.getElementById('pAddress').value.trim();
-        let c = `${n.substring(0,3).toUpperCase()}-${String(globalParties.length + 1).padStart(3,'0')}`;
-        let ref = await db.collection("customers").add({ customer_name: n, customer_code: c, address: a });
-        for(let i of document.querySelectorAll('.rate-field')) {
-            await db.collection("customer_rates").add({ customer_id: ref.id, process_name: i.getAttribute('data-proc'), rate: parseFloat(i.value) || 0 });
+    async function deleteInvoice(id){
+        if(confirm('এই Challan/Bill ডিলেট করবেন?')){
+            await db.collection("invoices").doc(id).delete();
+            alert("Deleted!");
         }
+    }
+
+    async function saveSettingItem(e,type,fId){
+        e.preventDefault();
+        await db.collection("general_settings").add({type,name:document.getElementById(fId).value.trim()});
+        document.getElementById(fId).value='';
+    }
+
+    function renderControlPanelUI(){
+        document.getElementById('fab-setting-list').innerHTML=globalSettings.filter(s=>s.type==='fabrication').map(d=>`<li class="py-1 flex justify-between"><span>${d.name}</span>${currentUserRole==='admin'?`<button onclick="db.collection('general_settings').doc('${d.id}').delete()" class="text-red-500 font-bold">X</button>`:''}</li>`).join('');
+        document.getElementById('proc-setting-list').innerHTML=globalSettings.filter(s=>s.type==='process').map(d=>`<li class="py-1 flex justify-between"><span>${d.name}</span>${currentUserRole==='admin'?`<button onclick="db.collection('general_settings').doc('${d.id}').delete()" class="text-red-500 font-bold">X</button>`:''}</li>`).join('');
+        document.getElementById('party-rate-inputs').innerHTML=globalSettings.filter(s=>s.type==='process').map(p=>`<div class="flex justify-between items-center bg-gray-50 p-1 rounded border"><span>${p.name}</span><input type="number" placeholder="Rate" class="w-16 p-0.5 bg-white excel-box text-center rate-field text-gray-900" data-proc="${p.name}"></div>`).join('');
+    }
+
+    async function savePartyAndCustomRates(e){
+        e.preventDefault();
+        let n=document.getElementById('pName').value.trim();
+        let a=document.getElementById('pAddress').value.trim();
+        let c=`${n.substring(0,3).toUpperCase()}-${String(globalParties.length+1).padStart(3,'0')}`;
+        let ref=await db.collection("customers").add({customer_name:n,customer_code:c,address:a});
+        for(let i of document.querySelectorAll('.rate-field')){await db.collection("customer_rates").add({customer_id:ref.id,process_name:i.getAttribute('data-proc'),rate:parseFloat(i.value)||0});}
         alert(`Party Saved! Code: ${c}`);
-        document.getElementById('pName').value = '';
-        document.getElementById('pAddress').value = '';
+        document.getElementById('pName').value='';
+        document.getElementById('pAddress').value='';
         renderControlPanelUI();
     }
 
-    function renderPartyRegistryTable() {
-        document.getElementById('party-registry-body').innerHTML = globalParties.map(p => `
+    function renderPartyRegistryTable(){
+        document.getElementById('party-registry-body').innerHTML=globalParties.map(p=>`
             <tr>
                 <td class="p-1 font-bold text-blue-600">${p.customer_code}</td>
                 <td class="p-1">${p.customer_name}</td>
-                <td class="p-1 text-center"><button onclick="if(confirm('Delete customer?'))db.collection('customers').doc('${p.id}').delete()" class="text-red-500">X</button></td>
+                <td class="p-1 text-center">${currentUserRole==='admin'?`<button onclick="if(confirm('Delete?'))db.collection('customers').doc('${p.id}').delete()" class="text-red-500 font-bold">X</button>`:'-'}</td>
             </tr>`).join('');
     }
 </script>
