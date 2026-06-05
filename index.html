@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ডাইং ERP - লগইন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-600">Dyeing ERP Portal</h1>
+            <p class="text-gray-500 text-sm mt-1">আপনার অ্যাকাউন্ট দিয়ে লগইন করুন</p>
+        </div>
+
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm text-center"></div>
+
+        <form id="login-form">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2" for="username">ইউজার নাম / ইমেইল</label>
+                <input class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="text" id="username" placeholder="username অথবা email" required>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2" for="password">পাসওয়ার্ড</label>
+                <input class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200" type="submit">
+                লগইন করুন
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // আপনার দেওয়া আসল ফায়ারবেস কনফিগারেশন
+        const firebaseConfig = {
+            apiKey: "AIzaSyBHF_4XEBs_ZLQQnQValqWOFgBG_bxegOo",
+            authDomain: "dyeing-erp.firebaseapp.com",
+            projectId: "dyeing-erp",
+            storageBucket: "dyeing-erp.firebasestorage.app",
+            messagingSenderId: "177578532239",
+            appId: "1:177578532239:web:18e331b7e9c0ee12347ffa"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+
+            let usernameInput = document.getElementById('username').value.trim();
+            let passwordInput = document.getElementById('password').value;
+            let errorBox = document.getElementById('error-message');
+            
+            errorBox.classList.add('hidden'); 
+            let finalEmail = usernameInput;
+
+            if (usernameInput === 'superadmin') {
+                finalEmail = 'superadmin@erp.com';
+            }
+
+            alert("ফায়ারবেস সার্ভারে লগইনের অনুরোধ পাঠানো হচ্ছে... ইমেইল: " + finalEmail);
+
+            firebase.auth().signInWithEmailAndPassword(finalEmail, passwordInput)
+                .then((userCredential) => {
+                    alert('অভিনন্দন! লগইন সফল হয়েছে।');
+                    window.location.href = 'super-admin.html'; 
+                })
+                .catch((error) => {
+                    alert("সার্ভার থেকে এরর এসেছে: " + error.message);
+                    errorBox.innerText = "ভুল ইউজারনাম অথবা পাসওয়ার্ড! আবার চেষ্টা করুন।";
+                    errorBox.classList.remove('hidden');
+                });
+        });
+    </script>
+</body>
+</html>
