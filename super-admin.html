@@ -3,144 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>সুপার অ্যাডমিন ড্যাশবোর্ড - ডাইং ERP</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ফায়ারবেস কোর, অথেনটিকেশন এবং ফায়ারস্টোর ডাটাবেজ লাইব্রেরি -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <title>Super Admin Panel - Dyeing ERP</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f7f6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .btn { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; margin: 2px; }
+        .block { background-color: #ff9800; color: white; }
+        .active { background-color: #4caf50; color: white; }
+        .delete { background-color: #f44336; color: white; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body>
 
-    <!-- টপ নেভিগেশন বার -->
-    <nav class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
-        <h1 class="text-xl font-bold">Dyeing ERP - Control Panel</h1>
-        <div class="flex items-center gap-4">
-            <span id="user-display" class="text-sm bg-blue-700 px-3 py-1 rounded-full">লোড হচ্ছে...</span>
-            <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded shadow transition">
-                লগআউট
-            </button>
-        </div>
-    </nav>
+<h2>ডাইং ERP কন্ট্রোল প্যানেল</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ফ্যাক্টরির নাম</th>
+            <th>স্ট্যাটাস</th>
+            <th>অ্যাকশন</th>
+        </tr>
+    </thead>
+    <tbody id="factoryTable">
+        </tbody>
+</table>
 
-    <!-- মেইন কন্টেন্ট -->
-    <div class="max-w-7xl mx-auto p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">স্বাগতম, সুপার অ্যাডমিন!</h2>
+<script>
+    // আপনার অরিজিনাল ফায়ারবেস কনফিগারেশন
+    const firebaseConfig = {
+        apiKey: "AIzaSyBHF_4XEBs_ZLQQnQValqWOFgBG_bxegOo",
+        authDomain: "dyeing-erp.firebaseapp.com",
+        databaseURL: "https://dyeing-erp-default-rtdb.firebaseio.com",
+        projectId: "dyeing-erp",
+        storageBucket: "dyeing-erp.firebasestorage.app",
+        messagingSenderId: "177578532239",
+        appId: "1:177578532239:web:18e331b7e9c0ee12347ffa"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('factories');
+
+    // ডাটা লোড ও রেন্ডার করা
+    db.on('value', (snapshot) => {
+        const table = document.getElementById('factoryTable');
+        table.innerHTML = '';
         
-        <!-- ড্যাশবোর্ড কার্ডসমূহ (ফায়ারবেস থেকে লাইভ হবে) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
-                <p class="text-gray-500 text-sm font-medium uppercase">মোট ফ্যাক্টরি</p>
-                <!-- এই আইডিটি লাইভ ডাটা দেখাবে -->
-                <p id="factory-count" class="text-3xl font-bold text-gray-800 mt-1">০টি</p>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
-                <p class="text-gray-500 text-sm font-medium uppercase">চলতি ব্যাচ (Active Batches)</p>
-                <p class="text-3xl font-bold text-gray-800 mt-1">0টি</p>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
-                <p class="text-gray-500 text-sm font-medium uppercase">মোট ইউজার অ্যাকাউন্ট</p>
-                <p class="text-3xl font-bold text-gray-800 mt-1">১ জন</p>
-            </div>
-        </div>
+        snapshot.forEach((childSnapshot) => {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            const status = data.status || 'active'; // ডিফল্ট 'active'
 
-        <!-- ফ্যাক্টরি ম্যানেজমেন্ট সেকশন -->
-        <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">ফ্যাক্টরি তালিকা ও নিয়ন্ত্রণ</h3>
-                <!-- এই বাটনে আইডি যোগ করা হয়েছে -->
-                <button id="add-factory-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow transition">
-                    + নতুন ফ্যাক্টরি যোগ করুন
-                </button>
-            </div>
-            <!-- এখানে ফ্যাক্টরিগুলোর নাম লাইভ জমা হবে -->
-            <div id="factory-list-container">
-                <p class="text-gray-500 text-center py-8">লোড হচ্ছে...</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // আপনার ফায়ারবেস কনফিগারেশন
-        const firebaseConfig = {
-            apiKey: "AIzaSyBHF_4XEBs_ZLQQnQValqWOFgBG_bxegOo",
-            authDomain: "dyeing-erp.firebaseapp.com",
-            projectId: "dyeing-erp",
-            storageBucket: "dyeing-erp.firebasestorage.app",
-            messagingSenderId: "177578532239",
-            appId: "1:177578532239:web:18e331b7e9c0ee12347ffa"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        
-        // ডাটাবেজ ভেরিয়েবল তৈরি
-        const db = firebase.firestore();
-
-        // ১. সিকিউরিটি চেক: ইউজার লগইন আছে কি না
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('user-display').innerText = user.email;
-                listenToFactories(); // লগইন থাকলে ডাটাবেজ থেকে ফ্যাক্টরি লিস্ট আনা শুরু করো
-            } else {
-                alert("অনুগ্রহ করে আগে লগইন করুন!");
-                window.location.href = 'index.html'; 
-            }
+            table.innerHTML += `
+                <tr>
+                    <td>${data.name || 'নাম নেই'}</td>
+                    <td><b>${status.toUpperCase()}</b></td>
+                    <td>
+                        <button class="btn ${status === 'blocked' ? 'active' : 'block'}" onclick="toggleStatus('${key}', '${status}')">
+                            ${status === 'blocked' ? 'আনব্লক' : 'ব্লক'}
+                        </button>
+                        <button class="btn delete" onclick="deleteFactory('${key}')">ডিলিট</button>
+                    </td>
+                </tr>
+            `;
         });
+    });
 
-        // ২. ডাটাবেজ থেকে রিয়েল-টাইম ফ্যাক্টরি ডেটা পড়ার লজিক
-        function listenToFactories() {
-            db.collection("factories").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-                // মোট কয়টি ফ্যাক্টরি আছে তা আপডেট করা
-                document.getElementById('factory-count').innerText = snapshot.size + "টি";
-                
-                let container = document.getElementById('factory-list-container');
-                
-                if (snapshot.empty) {
-                    container.innerHTML = `<p class="text-gray-500 text-center py-8">এখনো কোনো ফ্যাক্টরি যুক্ত করা হয়নি।</p>`;
-                    return;
-                }
-                
-                // তালিকায় নতুন ফ্যাক্টরিগুলো সাজিয়ে দেখানো
-                let html = `<ul class="divide-y divide-gray-200">`;
-                snapshot.forEach((doc) => {
-                    let factory = doc.data();
-                    html += `
-                        <li class="py-3 flex justify-between items-center">
-                            <span class="text-gray-800 font-medium">${factory.name}</span>
-                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">সক্রিয়</span>
-                        </li>
-                    `;
-                });
-                html += `</ul>`;
-                container.innerHTML = html;
-            });
+    // ব্লক/আনব্লক ফাংশন
+    function toggleStatus(key, currentStatus) {
+        const newStatus = (currentStatus === 'blocked') ? 'active' : 'blocked';
+        firebase.database().ref('factories/' + key).update({ status: newStatus })
+            .then(() => alert("স্ট্যাটাস পরিবর্তন হয়েছে!"))
+            .catch(error => alert("সমস্যা হয়েছে: " + error.message));
+    }
+
+    // ডিলিট ফাংশন
+    function deleteFactory(key) {
+        if(confirm("আপনি কি নিশ্চিতভাবে এই ফ্যাক্টরি ডিলিট করতে চান?")) {
+            firebase.database().ref('factories/' + key).remove()
+                .then(() => alert("সফলভাবে ডিলিট হয়েছে!"))
+                .catch(error => alert("ডিলিট করতে সমস্যা হয়েছে!"));
         }
+    }
+</script>
 
-        // ৩. নতুন ফ্যাক্টরি ডাটাবেজে যোগ করার লজিক
-        document.getElementById('add-factory-btn').addEventListener('click', () => {
-            let factoryName = prompt("নতুন ফ্যাক্টরি বা ডাইং মিলের নাম লিখুন:");
-            
-            if (factoryName && factoryName.trim() !== "") {
-                db.collection("factories").add({
-                    name: factoryName.trim(),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                })
-                .then(() => {
-                    alert("ফ্যাক্টরি সফলভাবে ডাটাবেজে যুক্ত হয়েছে!");
-                })
-                .catch((error) => {
-                    alert("ডাটা সেভ করতে সমস্যা হয়েছে: " + error.message);
-                });
-            }
-        });
-
-        // ৪. লগআউট বাটন
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            firebase.auth().signOut().then(() => {
-                alert("সফলভাবে লগআউট হয়েছে!");
-                window.location.href = 'index.html';
-            });
-        });
-    </script>
 </body>
 </html>
