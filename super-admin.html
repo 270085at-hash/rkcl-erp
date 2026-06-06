@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Admin Dashboard - Dyeing ERP</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 0; display: flex; }
+        /* সাইডবার ডিজাইন */
+        .sidebar { width: 250px; background: #333; color: white; height: 100vh; padding: 20px; }
+        .sidebar a { display: block; color: white; padding: 10px; text-decoration: none; border-bottom: 1px solid #444; }
+        
+        /* মূল কনটেন্ট */
+        .main-content { flex: 1; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #007bff; color: white; }
+        .btn { padding: 5px 10px; cursor: pointer; border: none; border-radius: 3px; }
+        .block { background: #ff9800; color: white; }
+        .active { background: #4caf50; color: white; }
+        .delete { background: #f44336; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>ERP Admin</h2>
+    <a href="#">ড্যাশবোর্ড</a>
+    <a href="#">ফ্যাক্টরি তালিকা</a>
+    <a href="#">পেমেন্ট রিপোর্ট</a>
+    <a href="#">সেটিংস</a>
+</div>
+
+<div class="main-content">
+    <h2>ফ্যাক্টরি কন্ট্রোল প্যানেল</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ফ্যাক্টরির নাম</th>
+                <th>স্ট্যাটাস</th>
+                <th>অ্যাকশন</th>
+            </tr>
+        </thead>
+        <tbody id="factoryTable">
+            <!-- ডাটা এখানে আসবে -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBHF_4XEBs_ZLQQnQValqWOFgBG_bxegOo",
+        authDomain: "dyeing-erp.firebaseapp.com",
+        databaseURL: "https://dyeing-erp-default-rtdb.firebaseio.com",
+        projectId: "dyeing-erp",
+        storageBucket: "dyeing-erp.firebasestorage.app",
+        messagingSenderId: "177578532239",
+        appId: "1:177578532239:web:18e331b7e9c0ee12347ffa"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('factories');
+
+    db.on('value', (snapshot) => {
+        const table = document.getElementById('factoryTable');
+        table.innerHTML = '';
+        snapshot.forEach((childSnapshot) => {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            const status = data.status || 'active';
+
+            table.innerHTML += `
+                <tr>
+                    <td>${data.name || 'N/A'}</td>
+                    <td>${status.toUpperCase()}</td>
+                    <td>
+                        <button class="btn ${status === 'blocked' ? 'active' : 'block'}" onclick="toggleStatus('${key}', '${status}')">
+                            ${status === 'blocked' ? 'আনব্লক' : 'ব্লক'}
+                        </button>
+                        <button class="btn delete" onclick="deleteFactory('${key}')">ডিলিট</button>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+
+    function toggleStatus(key, status) {
+        const newStatus = (status === 'blocked') ? 'active' : 'blocked';
+        firebase.database().ref('factories/' + key).update({ status: newStatus });
+    }
+
+    function deleteFactory(key) {
+        if(confirm("নিশ্চিত ডিলিট করতে চান?")) {
+            firebase.database().ref('factories/' + key).remove();
+        }
+    }
+</script>
+
+</body>
+</html>
